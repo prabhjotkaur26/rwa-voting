@@ -8,39 +8,30 @@ table = dynamodb.Table(os.environ['TABLE_NAME'])
 
 def lambda_handler(event, context):
     try:
-        # Parse request body
-        if "body" not in event:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"message": "Invalid request: no body"})
-            }
+        print("EVENT:", event)
 
-       # Parse request body safely
-body = {}
+        # Safe body parsing
+        body = {}
+        if event.get("body"):
+            if isinstance(event["body"], str):
+                body = json.loads(event["body"])
+            else:
+                body = event["body"]
 
-if event.get("body"):
-    if isinstance(event["body"], str):
-        body = json.loads(event["body"])
-    else:
-        body = event["body"]
-
-        # Validate input
         voter_id = body.get("voterId")
         election_id = body.get("electionId")
         post = body.get("post")
         candidate_id = body.get("candidateId")
 
-        if not all([voter_id, election_id, post, candidate_id]):
+        if not voter_id or not election_id or not post or not candidate_id:
             return {
                 "statusCode": 400,
                 "body": json.dumps({"message": "Missing required fields"})
             }
 
-        # Create keys
         pk = f"VOTER#{voter_id}"
         sk = f"{election_id}#{post}"
 
-        # Save vote (prevent duplicate)
         table.put_item(
             Item={
                 "PK": pk,
@@ -57,12 +48,12 @@ if event.get("body"):
         }
 
     except Exception as e:
-        print("ERROR:", str(e))  # logs CloudWatch me jayega
+        print("ERROR:", str(e))
 
         return {
-            "statusCode": 400,
+            "statusCode": 500,
             "body": json.dumps({
-                "message": "Already voted or error occurred",
+                "message": "Internal Server Error",
                 "error": str(e)
             })
         }
