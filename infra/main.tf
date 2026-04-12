@@ -43,11 +43,14 @@ resource "aws_iam_role_policy" "ddb_policy" {
     Version = "2012-10-17",
     Statement = [{
       Effect = "Allow",
-      Action = [
-        "dynamodb:PutItem",
-        "dynamodb:GetItem",
-        "dynamodb:Query"
-      ],
+     Action = [
+  "dynamodb:PutItem",
+  "dynamodb:GetItem",
+  "dynamodb:Query",
+  "logs:CreateLogGroup",
+  "logs:CreateLogStream",
+  "logs:PutLogEvents"
+]
       Resource = "*"
     }]
   })
