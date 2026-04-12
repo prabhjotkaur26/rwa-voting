@@ -1,6 +1,6 @@
 # ---------------- DYNAMODB ----------------
 resource "aws_dynamodb_table" "votes" {
-  name         = "${var.project_name}-votes2"
+  name         = "${var.project_name}-votes3"
   billing_mode = "PAY_PER_REQUEST"
 
   hash_key  = "PK"
@@ -22,7 +22,7 @@ resource "aws_dynamodb_table" "votes" {
 
 # ---------------- IAM ROLE ----------------
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.project_name}-lambda-role2"
+  name = "${var.project_name}-lambda-role3"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -198,12 +198,14 @@ resource "aws_cloudfront_distribution" "cdn" {
   enabled = true
 
   default_cache_behavior {
-    target_origin_id       = "s3-origin"
-    viewer_protocol_policy = "redirect-to-https"
+  target_origin_id       = "s3-origin"
+  viewer_protocol_policy = "redirect-to-https"
 
-    allowed_methods = ["GET", "HEAD"]
-    cached_methods  = ["GET", "HEAD"]
-  }
+  allowed_methods = ["GET", "HEAD"]
+  cached_methods  = ["GET", "HEAD"]
+
+  cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+}
 
   viewer_certificate {
     cloudfront_default_certificate = true
