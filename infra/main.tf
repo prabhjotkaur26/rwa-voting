@@ -59,7 +59,7 @@ resource "aws_lambda_function" "vote" {
   runtime       = "python3.11"
   handler       = "app.lambda_handler"
 
-  filename      = "../lambdas/vote/vote.zip"
+  filename      = "${path.module}/../lambdas/vote/vote.zip"
 
   role = aws_iam_role.lambda_role.arn
 
@@ -83,9 +83,31 @@ resource "aws_apigatewayv2_integration" "vote" {
   integration_uri  = aws_lambda_function.vote.invoke_arn
 }
 
+# ✅ FIXED ROUTE (with dependency)
 resource "aws_apigatewayv2_route" "vote" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "POST /vote"
 
   target = "integrations/${aws_apigatewayv2_integration.vote.id}"
+
+  depends_on = [
+    aws_apigatewayv2_integration.vote
+  ]
+}
+
+# ✅ ADD THIS (VERY IMPORTANT - STAGE)
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.api.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+# ✅ ADD THIS (VERY IMPORTANT - PERMISSION)
+resource "aws_lambda_permission" "api_gw" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.vote.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }
