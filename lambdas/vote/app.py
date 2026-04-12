@@ -32,6 +32,7 @@ def lambda_handler(event, context):
         pk = f"VOTER#{voter_id}"
         sk = f"{election_id}#{post}"
 
+        # ✅ FIXED CONDITION (IMPORTANT)
         table.put_item(
             Item={
                 "PK": pk,
@@ -39,7 +40,7 @@ def lambda_handler(event, context):
                 "candidateId": candidate_id,
                 "time": datetime.utcnow().isoformat()
             },
-            ConditionExpression="attribute_not_exists(PK)"
+            ConditionExpression="attribute_not_exists(SK)"
         )
 
         return {
@@ -49,6 +50,13 @@ def lambda_handler(event, context):
 
     except Exception as e:
         print("ERROR:", str(e))
+
+        # ✅ HANDLE DUPLICATE VOTE
+        if "ConditionalCheckFailedException" in str(e):
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"message": "You already voted for this post"})
+            }
 
         return {
             "statusCode": 500,
