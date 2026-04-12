@@ -15,7 +15,14 @@ def lambda_handler(event, context):
                 "body": json.dumps({"message": "Invalid request: no body"})
             }
 
+       # Parse request body safely
+body = {}
+
+if event.get("body"):
+    if isinstance(event["body"], str):
         body = json.loads(event["body"])
+    else:
+        body = event["body"]
 
         # Validate input
         voter_id = body.get("voterId")
