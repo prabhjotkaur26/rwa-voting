@@ -1,6 +1,6 @@
 # ---------------- DYNAMODB ----------------
 resource "aws_dynamodb_table" "votes" {
-  name         = "${var.project_name}-votes1"
+  name         = "${var.project_name}-votes2"
   billing_mode = "PAY_PER_REQUEST"
 
   hash_key  = "PK"
@@ -22,7 +22,7 @@ resource "aws_dynamodb_table" "votes" {
 
 # ---------------- IAM ROLE ----------------
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.project_name}-lambda-role1"
+  name = "${var.project_name}-lambda-role2"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
