@@ -43,3 +43,65 @@ resource "aws_lambda_function" "vote" {
     }
   }
 }
+data "archive_file" "verify_zip" {
+  type        = "zip"
+  source_dir  = "../lambdas/verify"
+  output_path = "verify.zip"
+}
+
+resource "aws_lambda_function" "verify" {
+  function_name = "verify-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.lambda_handler"
+  runtime       = "python3.11"
+
+  filename = data.archive_file.verify_zip.output_path
+
+  environment {
+    variables = {
+      OTP_TABLE  = aws_dynamodb_table.otp.name
+      JWT_SECRET = "mysecret123"
+    }
+  }
+}
+data "archive_file" "admin_zip" {
+  type        = "zip"
+  source_dir  = "../lambdas/admin"
+  output_path = "admin.zip"
+}
+
+resource "aws_lambda_function" "admin" {
+  function_name = "admin-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.lambda_handler"
+  runtime       = "python3.11"
+
+  filename = data.archive_file.admin_zip.output_path
+
+  environment {
+    variables = {
+      VOTE_TABLE = aws_dynamodb_table.votes.name
+    }
+  }
+}
+data "archive_file" "export_zip" {
+  type        = "zip"
+  source_dir  = "../lambdas/export"
+  output_path = "export.zip"
+}
+
+resource "aws_lambda_function" "export" {
+  function_name = "export-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.lambda_handler"
+  runtime       = "python3.11"
+
+  filename = data.archive_file.export_zip.output_path
+
+  environment {
+    variables = {
+      VOTE_TABLE = aws_dynamodb_table.votes.name
+      BUCKET     = aws_s3_bucket.candidate_images.bucket
+    }
+  }
+}
