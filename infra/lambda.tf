@@ -38,6 +38,8 @@ resource "aws_lambda_function" "vote" {
   environment {
     variables = {
       VOTE_TABLE = aws_dynamodb_table.votes.name
+      SENDER_EMAIL = "prabh008968@gmail.com"
+      JWT_SECRET  = "mysecret123"
     }
   }
 }
