@@ -19,10 +19,9 @@ resource "aws_iam_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_policy_attachment" "sns_access" {
-  name       = "sns-access"
-  roles      = [aws_iam_role.lambda_role.name]
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
+resource "aws_iam_role_policy_attachment" "ses_access" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSESFullAccess"
 }
 
 resource "aws_iam_policy_attachment" "dynamo_access" {
