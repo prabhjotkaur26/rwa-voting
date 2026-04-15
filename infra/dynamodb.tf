@@ -1,10 +1,10 @@
 resource "aws_dynamodb_table" "voters" {
   name         = "voter-registry"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "mobile"
+  hash_key     = "email"
 
   attribute {
-    name = "mobile"
+    name = "email"
     type = "S"
   }
 }
@@ -12,10 +12,10 @@ resource "aws_dynamodb_table" "voters" {
 resource "aws_dynamodb_table" "otp" {
   name         = "otp-table"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "mobile"
+  hash_key     = "email"
 
   attribute {
-    name = "mobile"
+    name = "email"
     type = "S"
   }
 
