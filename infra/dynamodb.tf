@@ -41,3 +41,13 @@ resource "aws_dynamodb_table" "votes" {
     type = "S"
   }
 }
+resource "aws_dynamodb_table" "election" {
+  name         = "election-config"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "post_id"
+
+  attribute {
+    name = "post_id"
+    type = "S"
+  }
+}
