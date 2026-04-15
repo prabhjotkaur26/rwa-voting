@@ -1,8 +1,8 @@
 resource "aws_dynamodb_table_item" "voters" {
   for_each = toset([
-    "user1@gmail.com",
-    "user2@gmail.com",
-    "user3@gmail.com"
+    "prabh008968@gmail.com",
+    "kaurprabhsidhu852004@gmail.com",
+    "prabhjot582004@gmail.com"
   ])
 
   table_name = aws_dynamodb_table.voters.name
