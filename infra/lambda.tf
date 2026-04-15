@@ -12,14 +12,14 @@ resource "aws_lambda_function" "auth" {
 
   filename = data.archive_file.auth_zip.output_path
 
-  environment {
-    variables = {
-      OTP_TABLE    = aws_dynamodb_table.otp.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
-    }
+environment {
+  variables = {
+    OTP_TABLE    = aws_dynamodb_table.otp.name
+    VOTER_TABLE  = aws_dynamodb_table.voters.name
+    SENDER_EMAIL = "your-email@gmail.com"
   }
 }
-
+}
 data "archive_file" "vote_zip" {
   type        = "zip"
   source_dir  = "../lambdas/vote"
