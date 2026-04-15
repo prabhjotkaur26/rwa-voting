@@ -1,33 +1,46 @@
 import json, boto3, random, time, os
 
 dynamodb = boto3.resource('dynamodb')
-sns = boto3.client('sns')
+ses = boto3.client('ses')
 
 table = dynamodb.Table(os.environ['OTP_TABLE'])
 
+SENDER = os.environ['SENDER_EMAIL']
+
 def lambda_handler(event, context):
     body = json.loads(event['body'])
-    mobile = body['mobileNumber']
-
-    if not mobile.startswith("+"):
-        mobile = "+" + mobile
+    email = body['email']
 
     otp = str(random.randint(100000, 999999))
-    expires = int(time.time()) + 300
+    expiry = int(time.time()) + 300  # 5 min
 
+    # Store OTP in DynamoDB
     table.put_item(Item={
-        "mobileNumber": mobile,
+        "email": email,
         "otp": otp,
-        "expiresAt": expires,
+        "expiry": expiry,
         "used": False
     })
 
-    sns.publish(
-        PhoneNumber=mobile,
-        Message=f"Your OTP is {otp}"
+    # Send Email via SES
+    ses.send_email(
+        Source=SENDER,
+        Destination={
+            'ToAddresses': [email]
+        },
+        Message={
+            'Subject': {
+                'Data': 'Your OTP for Voting'
+            },
+            'Body': {
+                'Text': {
+                    'Data': f'Your OTP is {otp}. It will expire in 5 minutes.'
+                }
+            }
+        }
     )
 
     return {
         "statusCode": 200,
-        "body": json.dumps({"message": "OTP sent"})
+        "body": json.dumps({"message": "OTP sent to email"})
     }
