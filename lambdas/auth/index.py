@@ -1,29 +1,38 @@
-import boto3, os, random, time
+import boto3, random, time, os
 
 dynamodb = boto3.resource('dynamodb')
-sns = boto3.client('sns')
+ses = boto3.client('ses')
 
 otp_table = dynamodb.Table(os.environ['OTP_TABLE'])
 voter_table = dynamodb.Table(os.environ['VOTER_TABLE'])
 
-def lambda_handler(event, context):
-    mobile = event['mobile']
+SENDER = os.environ['SENDER_EMAIL']
 
-    res = voter_table.get_item(Key={'mobile': mobile})
+def lambda_handler(event, context):
+    email = event['email']
+
+    # Check voter exists
+    res = voter_table.get_item(Key={'mobile': email})
     if 'Item' not in res:
         return {"status": "rejected"}
 
     otp = str(random.randint(100000, 999999))
 
     otp_table.put_item(Item={
-        'mobile': mobile,
+        'mobile': email,
         'otp': otp,
         'expiry': int(time.time()) + 300
     })
 
-    sns.publish(
-        PhoneNumber=mobile,
-        Message=f"Your OTP is {otp}"
+    ses.send_email(
+        Source=SENDER,
+        Destination={'ToAddresses': [email]},
+        Message={
+            'Subject': {'Data': 'Your OTP'},
+            'Body': {
+                'Text': {'Data': f'Your OTP is {otp}'}
+            }
+        }
     )
 
     return {"status": "sent"}
