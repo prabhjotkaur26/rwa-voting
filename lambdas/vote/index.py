@@ -1,12 +1,30 @@
-import boto3, os
+import jwt, os
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['VOTE_TABLE'])
+SECRET = os.environ['JWT_SECRET']
 
 def lambda_handler(event, context):
+
+    headers = event['headers']
+    token = headers.get("Authorization")
+
+    try:
+        decoded = jwt.decode(token, SECRET, algorithms=["HS256"])
+        email = decoded['email']
+    except:
+        return {"statusCode": 401, "body": "Unauthorized"}
+
+    body = json.loads(event['body'])
+
+    post_id = body['post_id']
+    candidate_id = body['candidate_id']
+
     table.put_item(
-        Item=event,
+        Item={
+            "post_id": post_id,
+            "voter_id": email,
+            "candidate_id": candidate_id
+        },
         ConditionExpression="attribute_not_exists(voter_id)"
     )
 
-    return {"status": "success"}
+    return {"statusCode": 200, "body": "Vote recorded"}
