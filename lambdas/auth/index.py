@@ -6,7 +6,16 @@ ses = boto3.client('ses')
 otp_table = dynamodb.Table(os.environ['OTP_TABLE'])
 voter_table = dynamodb.Table(os.environ['VOTER_TABLE'])
 
+res = voter_table.get_item(Key={"email": email})
+
+if "Item" not in res:
+    return {
+        "statusCode": 403,
+        "body": json.dumps({"message": "Not a registered voter"})
+    }
+
 SENDER = os.environ['SENDER_EMAIL']
+
 
 def lambda_handler(event, context):
     email = event['email']
