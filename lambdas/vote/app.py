@@ -22,6 +22,14 @@ def lambda_handler(event, context):
         election_id = body.get("electionId")
         post = body.get("post")
         candidate_id = body.get("candidateId")
+        config_table = dynamodb.Table(os.environ['CONFIG_TABLE'])
+
+config = config_table.get_item(Key={"post_id": post_id})
+
+candidates = config['Item']['candidates']
+
+if len(candidates) == 1:
+    return {"statusCode": 200, "body": "Skipped"}
 
         if not voter_id or not election_id or not post or not candidate_id:
             return {
