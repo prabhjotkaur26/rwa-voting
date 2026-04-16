@@ -25,11 +25,13 @@ resource "aws_dynamodb_table" "otp" {
   }
 }
 
+# ✅ MAIN VOTES TABLE (FIXED)
 resource "aws_dynamodb_table" "votes" {
   name         = "votes"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "post_id"
-  range_key    = "voter_id"
+
+  hash_key  = "post_id"
+  range_key = "voter_id"
 
   attribute {
     name = "post_id"
@@ -41,6 +43,7 @@ resource "aws_dynamodb_table" "votes" {
     type = "S"
   }
 }
+
 resource "aws_dynamodb_table" "election" {
   name         = "election-config"
   billing_mode = "PAY_PER_REQUEST"
