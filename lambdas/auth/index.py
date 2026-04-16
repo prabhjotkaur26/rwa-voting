@@ -8,52 +8,62 @@ voter_table = dynamodb.Table(os.environ['VOTER_TABLE'])
 
 SENDER = os.environ['SENDER_EMAIL']
 
-
 def lambda_handler(event, context):
+    try:
+        body = event.get("body")
 
-    print("EVENT:", event)  # Debug
+        # ✅ Handle weird string body
+        if isinstance(body, str):
+            try:
+                body = json.loads(body)
+            except:
+                return {
+                    "statusCode": 400,
+                    "body": "Invalid JSON format"
+                }
 
-    # Parse body safely
-    body = event.get('body')
+        email = body.get("email") if isinstance(body, dict) else None
 
-    if isinstance(body, str):
-        body = json.loads(body)
-
-    email = body['email']
-
-    # ✅ Check voter exists
-    res = voter_table.get_item(Key={'email': email})
-
-    if 'Item' not in res:
-        return {
-            "statusCode": 403,
-            "body": json.dumps({"message": "Not a registered voter"})
-        }
-
-    # ✅ Generate OTP
-    otp = str(random.randint(100000, 999999))
-
-    # ✅ Store OTP
-    otp_table.put_item(Item={
-        'email': email,
-        'otp': otp,
-        'expiry': int(time.time()) + 300,
-        'used': False
-    })
-
-    # ✅ Send email via SES
-    ses.send_email(
-        Source=SENDER,
-        Destination={'ToAddresses': [email]},
-        Message={
-            'Subject': {'Data': 'Your OTP'},
-            'Body': {
-                'Text': {'Data': f'Your OTP is {otp}. It expires in 5 minutes.'}
+        if not email:
+            return {
+                "statusCode": 400,
+                "body": "Email required"
             }
-        }
-    )
 
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"message": "OTP sent"})
-    }
+        # ✅ Check voter
+        res = voter_table.get_item(Key={'email': email})
+        if 'Item' not in res:
+            return {
+                "statusCode": 403,
+                "body": json.dumps({"message": "Not a registered voter"})
+            }
+
+        otp = str(random.randint(100000, 999999))
+
+        otp_table.put_item(Item={
+            "email": email,
+            "otp": otp,
+            "expiry": int(time.time()) + 300,
+            "used": False
+        })
+
+        ses.send_email(
+            Source=SENDER,
+            Destination={'ToAddresses': [email]},
+            Message={
+                'Subject': {'Data': 'OTP'},
+                'Body': {'Text': {'Data': f'Your OTP is {otp}'}}
+            }
+        )
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"message": "OTP sent"})
+        }
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return {
+            "statusCode": 500,
+            "body": str(e)
+        }
