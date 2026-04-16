@@ -10,19 +10,39 @@ SENDER = os.environ['SENDER_EMAIL']
 
 def lambda_handler(event, context):
     try:
+        print("EVENT:", event)
+
         body = event.get("body")
 
-        # ✅ Handle weird string body
+        # ✅ Strong body parsing
         if isinstance(body, str):
             try:
                 body = json.loads(body)
             except:
-                return {
-                    "statusCode": 400,
-                    "body": "Invalid JSON format"
-                }
+                # Try extracting JSON manually if malformed
+                if "email" in body:
+                    import re
+                    match = re.search(r'"email"\s*:\s*"([^"]+)"', body)
+                    if match:
+                        body = {"email": match.group(1)}
+                    else:
+                        return {
+                            "statusCode": 400,
+                            "body": "Invalid request format"
+                        }
+                else:
+                    return {
+                        "statusCode": 400,
+                        "body": "Invalid JSON format"
+                    }
 
-        email = body.get("email") if isinstance(body, dict) else None
+        if not isinstance(body, dict):
+            return {
+                "statusCode": 400,
+                "body": "Invalid body"
+            }
+
+        email = body.get("email")
 
         if not email:
             return {
@@ -30,7 +50,7 @@ def lambda_handler(event, context):
                 "body": "Email required"
             }
 
-        # ✅ Check voter
+        # ✅ Check voter exists
         res = voter_table.get_item(Key={'email': email})
         if 'Item' not in res:
             return {
@@ -38,21 +58,29 @@ def lambda_handler(event, context):
                 "body": json.dumps({"message": "Not a registered voter"})
             }
 
+        # ✅ Generate OTP
         otp = str(random.randint(100000, 999999))
+        expiry = int(time.time()) + 300
 
+        # ✅ Store OTP (overwrite old)
         otp_table.put_item(Item={
             "email": email,
             "otp": otp,
-            "expiry": int(time.time()) + 300,
+            "expiry": expiry,
             "used": False
         })
 
+        # ✅ Send email
         ses.send_email(
             Source=SENDER,
             Destination={'ToAddresses': [email]},
             Message={
-                'Subject': {'Data': 'OTP'},
-                'Body': {'Text': {'Data': f'Your OTP is {otp}'}}
+                'Subject': {'Data': 'Your OTP'},
+                'Body': {
+                    'Text': {
+                        'Data': f'Your OTP is {otp}. Valid for 5 minutes.'
+                    }
+                }
             }
         )
 
