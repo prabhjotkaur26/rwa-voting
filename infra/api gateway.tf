@@ -134,6 +134,3 @@ resource "aws_lambda_permission" "export" {
   function_name = aws_lambda_function.export.function_name
   principal     = "apigateway.amazonaws.com"
 }
-output "api_url" {
-  value = aws_apigatewayv2_api.api.api_endpoint
-}
