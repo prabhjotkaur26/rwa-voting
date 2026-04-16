@@ -1,14 +1,11 @@
 import json
 import boto3
 import os
-import jwt
 
 dynamodb = boto3.resource('dynamodb')
 
 voter_table = dynamodb.Table(os.environ['VOTER_TABLE'])
 config_table = dynamodb.Table(os.environ['CONFIG_TABLE'])
-
-JWT_SECRET = os.environ['JWT_SECRET']
 
 
 def lambda_handler(event, context):
@@ -16,33 +13,15 @@ def lambda_handler(event, context):
         print("EVENT:", event)
 
         # -----------------------------
-        # AUTH CHECK (ADMIN ONLY)
+        # SIMPLE ADMIN CHECK
         # -----------------------------
         headers = event.get("headers") or {}
-        auth_header = headers.get("Authorization") or headers.get("authorization")
+        auth = headers.get("Authorization") or headers.get("authorization")
 
-        if not auth_header:
+        if auth != "admin":
             return {
-                "statusCode": 401,
-                "body": json.dumps({"message": "Missing token"})
-            }
-
-        token = auth_header.replace("Bearer ", "").strip()
-
-        try:
-            decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            is_admin = decoded.get("isAdmin", False)
-
-            if not is_admin:
-                return {
-                    "statusCode": 403,
-                    "body": json.dumps({"message": "Admin access required"})
-                }
-
-        except Exception as e:
-            return {
-                "statusCode": 401,
-                "body": json.dumps({"message": f"Invalid token: {str(e)}"})
+                "statusCode": 403,
+                "body": json.dumps({"message": "Admin only"})
             }
 
         # -----------------------------
@@ -110,17 +89,42 @@ def lambda_handler(event, context):
                 Item={
                     "post_id": post_id,
                     "candidates": candidates,
-                    "status": "ACTIVE"
+                    "status": "CREATED"   # 👈 better than ACTIVE
                 }
             )
 
             return {
                 "statusCode": 200,
-                "body": json.dumps({"message": "Election created successfully"})
+                "body": json.dumps({"message": "Election created"})
             }
 
         # ====================================================
-        # 🟢 ACTION 3: CLOSE ELECTION
+        # 🟢 ACTION 3: START ELECTION
+        # ====================================================
+        elif action == "start_election":
+
+            post_id = body.get("post_id")
+
+            if not post_id:
+                return {
+                    "statusCode": 400,
+                    "body": json.dumps({"message": "post_id required"})
+                }
+
+            config_table.update_item(
+                Key={"post_id": post_id},
+                UpdateExpression="SET #s = :val",
+                ExpressionAttributeNames={"#s": "status"},
+                ExpressionAttributeValues={":val": "ACTIVE"}
+            )
+
+            return {
+                "statusCode": 200,
+                "body": json.dumps({"message": "Election started"})
+            }
+
+        # ====================================================
+        # 🟢 ACTION 4: CLOSE ELECTION
         # ====================================================
         elif action == "close_election":
 
