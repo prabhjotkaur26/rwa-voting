@@ -68,13 +68,13 @@ def lambda_handler(event, context):
         # 5. INSERT VOTE (NO DUPLICATE)
         # -----------------------------
         vote_table.put_item(
-            Item={
-                "voteId": vote_id,
-                "email": email,
-                "postId": post_id,
-                "candidateId": candidate_id,
-                "timestamp": datetime.utcnow().isoformat()
-            },
+    Item={
+        "post_id": post_id,
+        "voter_id": email,
+        "candidate_id": candidate_id,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+)
             ConditionExpression="attribute_not_exists(voteId)"
         )
 
