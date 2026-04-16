@@ -4,7 +4,9 @@ resource "aws_dynamodb_table_item" "voters" {
   table_name = aws_dynamodb_table.voters.name
   hash_key   = "email"
 
-  item = jsonencode({
-    email = each.value
-  })
+  item = <<ITEM
+{
+  "email": {"S": "${each.value}"}
+}
+ITEM
 }
