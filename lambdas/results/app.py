@@ -24,3 +24,20 @@ def lambda_handler(event, context):
         "statusCode": 200,
         "body": json.dumps(result)
     }
+response = vote_table.scan(
+    FilterExpression="post_id = :p",
+    ExpressionAttributeValues={":p": post_id}
+)
+
+votes = response.get("Items", [])
+
+result = {}
+
+for v in votes:
+    cid = v["candidate_id"]
+    result[cid] = result.get(cid, 0) + 1
+
+return {
+    "statusCode": 200,
+    "body": json.dumps(result)
+}
