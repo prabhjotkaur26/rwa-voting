@@ -5,6 +5,7 @@ import jwt
 import csv
 from io import StringIO, BytesIO
 from datetime import datetime
+from botocore.exceptions import ClientError
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
@@ -30,17 +31,20 @@ def lambda_handler(event, context):
         auth_header = headers.get("Authorization") or headers.get("authorization")
 
         if not auth_header:
-            return {"statusCode": 401, "body": "Missing token"}
+            return response(401, "Missing token")
 
         token = auth_header.replace("Bearer ", "").strip()
 
-        decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        try:
+            decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        except Exception as e:
+            return response(401, f"Invalid token: {str(e)}")
 
         if not decoded.get("isAdmin"):
-            return {"statusCode": 403, "body": "Admin only"}
+            return response(403, "Admin only")
 
         # -----------------------------
-        # BODY
+        # BODY PARSE
         # -----------------------------
         body = event.get("body") or "{}"
 
@@ -50,20 +54,38 @@ def lambda_handler(event, context):
         post_id = body.get("post_id")
 
         if not post_id:
-            return {"statusCode": 400, "body": "post_id required"}
+            return response(400, "post_id required")
 
         # -----------------------------
-        # FETCH VOTES
+        # CHECK ELECTION STATUS
         # -----------------------------
-        response = vote_table.scan(
+        config = config_table.get_item(Key={"post_id": post_id})
+        item = config.get("Item", {})
+
+        if item.get("status") != "CLOSED":
+            return response(400, "Election not closed yet")
+
+        # -----------------------------
+        # FETCH ALL VOTES (PAGINATION SAFE)
+        # -----------------------------
+        votes = []
+        response_db = vote_table.scan(
             FilterExpression="post_id = :p",
             ExpressionAttributeValues={":p": post_id}
         )
 
-        votes = response.get("Items", [])
+        votes.extend(response_db.get("Items", []))
+
+        while "LastEvaluatedKey" in response_db:
+            response_db = vote_table.scan(
+                FilterExpression="post_id = :p",
+                ExpressionAttributeValues={":p": post_id},
+                ExclusiveStartKey=response_db["LastEvaluatedKey"]
+            )
+            votes.extend(response_db.get("Items", []))
 
         if not votes:
-            return {"statusCode": 404, "body": "No votes found"}
+            return response(404, "No votes found")
 
         # -----------------------------
         # COUNT RESULTS
@@ -85,7 +107,7 @@ def lambda_handler(event, context):
         for cid, count in result.items():
             writer.writerow([cid, count])
 
-        csv_key = f"exports/{post_id}_{datetime.utcnow().timestamp()}.csv"
+        csv_key = f"exports/{post_id}_{int(datetime.utcnow().timestamp())}.csv"
 
         s3.put_object(
             Bucket=BUCKET,
@@ -109,7 +131,9 @@ def lambda_handler(event, context):
 
         doc.build(elements)
 
-        pdf_key = f"exports/{post_id}_{datetime.utcnow().timestamp()}.pdf"
+        pdf_buffer.seek(0)
+
+        pdf_key = f"exports/{post_id}_{int(datetime.utcnow().timestamp())}.pdf"
 
         s3.put_object(
             Bucket=BUCKET,
@@ -118,13 +142,23 @@ def lambda_handler(event, context):
         )
 
         # -----------------------------
-        # RETURN LINKS
+        # GENERATE PRESIGNED URL (IMPORTANT FIX)
         # -----------------------------
-        csv_url = f"https://{BUCKET}.s3.amazonaws.com/{csv_key}"
-        pdf_url = f"https://{BUCKET}.s3.amazonaws.com/{pdf_key}"
+        csv_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': BUCKET, 'Key': csv_key},
+            ExpiresIn=3600
+        )
+
+        pdf_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': BUCKET, 'Key': pdf_key},
+            ExpiresIn=3600
+        )
 
         return {
             "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps({
                 "csv": csv_url,
                 "pdf": pdf_url
@@ -133,7 +167,15 @@ def lambda_handler(event, context):
 
     except Exception as e:
         print("ERROR:", str(e))
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"message": "Internal error", "error": str(e)})
-        }
+        return response(500, str(e))
+
+
+# -----------------------------
+# COMMON RESPONSE FUNCTION
+# -----------------------------
+def response(code, message):
+    return {
+        "statusCode": code,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps({"message": message})
+    }
