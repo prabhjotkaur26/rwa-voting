@@ -68,15 +68,15 @@ def lambda_handler(event, context):
         # -----------------------------
         # 4. INSERT VOTE
         # -----------------------------
-        vote_table.put_item(
-            Item={
-                "post_id": post_id,
-                "voter_id": email,
-                "candidate_id": candidate_id,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-        )
-
+       vote_table.put_item(
+    Item={
+        "post_id": post_id,
+        "voter_id": email,
+        "candidate_id": candidate_id,
+        "timestamp": datetime.utcnow().isoformat()
+    },
+    ConditionExpression="attribute_not_exists(voter_id)"
+)
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "Vote cast successfully"})
