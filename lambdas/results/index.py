@@ -1,38 +1,25 @@
 import json
 import boto3
 import os
-import jwt
+from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 
 vote_table = dynamodb.Table(os.environ['VOTE_TABLE'])
 config_table = dynamodb.Table(os.environ['CONFIG_TABLE'])
 
-JWT_SECRET = os.environ['JWT_SECRET']
-
 
 def lambda_handler(event, context):
     try:
+        print("EVENT:", event)
+
+        # -----------------------------
+        # SIMPLE ADMIN CHECK (NO JWT)
+        # -----------------------------
         headers = event.get("headers") or {}
-        auth_header = headers.get("Authorization") or headers.get("authorization")
+        auth = headers.get("Authorization") or headers.get("authorization")
 
-        if not auth_header:
-            return {
-                "statusCode": 401,
-                "body": json.dumps({"message": "Missing token"})
-            }
-
-        token = auth_header.replace("Bearer ", "").strip()
-
-        try:
-            decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            email = decoded.get("email")
-            is_admin = decoded.get("isAdmin", False)
-        except Exception as e:
-            return {
-                "statusCode": 401,
-                "body": json.dumps({"message": f"Invalid token: {str(e)}"})
-            }
+        is_admin = auth == "admin"
 
         # -----------------------------
         # BODY PARSE
@@ -47,7 +34,7 @@ def lambda_handler(event, context):
         if not post_id:
             return {
                 "statusCode": 400,
-                "body": json.dumps({"message": "postId required"})
+                "body": json.dumps({"message": "post_id required"})
             }
 
         # -----------------------------
@@ -68,10 +55,7 @@ def lambda_handler(event, context):
         # QUERY VOTES (CORRECT)
         # -----------------------------
         response = vote_table.query(
-            KeyConditionExpression="post_id = :p",
-            ExpressionAttributeValues={
-                ":p": post_id
-            }
+            KeyConditionExpression=Key("post_id").eq(post_id)
         )
 
         votes = response.get("Items", [])
