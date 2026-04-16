@@ -1,28 +1,52 @@
-import json, boto3, os, jwt
+import json
+import boto3
+import os
+import jwt
+from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
+
 vote_table = dynamodb.Table(os.environ['VOTE_TABLE'])
 
 JWT_SECRET = os.environ['JWT_SECRET']
 
+
 def lambda_handler(event, context):
     try:
-        # ✅ Get token from headers
-        headers = event.get("headers", {})
-        token = headers.get("Authorization")
+        print("EVENT:", event)
 
-        if not token:
+        # -----------------------------
+        # 1. HEADERS SAFE READ
+        # -----------------------------
+        headers = event.get("headers", {})
+
+        auth_header = headers.get("Authorization") or headers.get("authorization")
+
+        if not auth_header:
             return {
                 "statusCode": 401,
-                "body": "Unauthorized"
+                "body": json.dumps({"message": "Missing token"})
             }
 
-        # ✅ Decode JWT
-        decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        email = decoded["email"]
+        token = auth_header.replace("Bearer ", "").strip()
 
-        # ✅ Parse body
-        body = event.get("body")
+        # -----------------------------
+        # 2. JWT VERIFY
+        # -----------------------------
+        try:
+            decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            email = decoded["email"]
+        except Exception as e:
+            return {
+                "statusCode": 401,
+                "body": json.dumps({"message": f"Invalid token: {str(e)}"})
+            }
+
+        # -----------------------------
+        # 3. BODY PARSE SAFE
+        # -----------------------------
+        body = event.get("body") or "{}"
+
         if isinstance(body, str):
             body = json.loads(body)
 
@@ -32,19 +56,24 @@ def lambda_handler(event, context):
         if not post_id or not candidate_id:
             return {
                 "statusCode": 400,
-                "body": "postId and candidateId required"
+                "body": json.dumps({"message": "postId and candidateId required"})
             }
 
-        # ✅ Unique key → email + post
+        # -----------------------------
+        # 4. UNIQUE VOTE KEY
+        # -----------------------------
         vote_id = f"{email}#{post_id}"
 
-        # ✅ Prevent duplicate vote
+        # -----------------------------
+        # 5. INSERT VOTE (NO DUPLICATE)
+        # -----------------------------
         vote_table.put_item(
             Item={
                 "voteId": vote_id,
                 "email": email,
                 "postId": post_id,
-                "candidateId": candidate_id
+                "candidateId": candidate_id,
+                "timestamp": datetime.utcnow().isoformat()
             },
             ConditionExpression="attribute_not_exists(voteId)"
         )
@@ -60,10 +89,10 @@ def lambda_handler(event, context):
         if "ConditionalCheckFailedException" in str(e):
             return {
                 "statusCode": 400,
-                "body": "You have already voted for this post"
+                "body": json.dumps({"message": "You already voted for this post"})
             }
 
         return {
             "statusCode": 500,
-            "body": str(e)
+            "body": json.dumps({"message": "Internal server error", "error": str(e)})
         }
