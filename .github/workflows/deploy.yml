@@ -65,6 +65,12 @@ jobs:
         run: |
           pip install PyJWT -t lambdas/verify/
 
+          - name: Install Lambda Dependencies
+            run: |
+              pip install PyJWT -t lambdas/auth/
+              pip install PyJWT -t lambdas/verify/
+              pip install PyJWT -t lambdas/vote/
+
       # -------------------------------
       # Terraform
       # -------------------------------
