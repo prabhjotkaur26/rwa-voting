@@ -114,3 +114,27 @@ resource "aws_lambda_function" "export" {
     }
   }
 }
+# RESULTS
+data "archive_file" "results_zip" {
+  type        = "zip"
+  source_dir  = "../lambdas/results"
+  output_path = "results.zip"
+}
+
+resource "aws_lambda_function" "results" {
+  function_name = "results-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.lambda_handler"
+  runtime       = "python3.11"
+
+  filename         = data.archive_file.results_zip.output_path
+  source_code_hash = data.archive_file.results_zip.output_base64sha256
+
+  environment {
+    variables = {
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
+      JWT_SECRET   = "mysecret123"
+    }
+  }
+}
