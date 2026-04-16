@@ -5,31 +5,20 @@ from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ['TABLE_NAME'])
+config_table = dynamodb.Table(os.environ['CONFIG_TABLE'])
 
 def lambda_handler(event, context):
     try:
         print("EVENT:", event)
 
-        # Safe body parsing
         body = {}
         if event.get("body"):
-            if isinstance(event["body"], str):
-                body = json.loads(event["body"])
-            else:
-                body = event["body"]
+            body = json.loads(event["body"]) if isinstance(event["body"], str) else event["body"]
 
         voter_id = body.get("voterId")
         election_id = body.get("electionId")
         post = body.get("post")
         candidate_id = body.get("candidateId")
-        config_table = dynamodb.Table(os.environ['CONFIG_TABLE'])
-
-config = config_table.get_item(Key={"post_id": post_id})
-
-candidates = config['Item']['candidates']
-
-if len(candidates) == 1:
-    return {"statusCode": 200, "body": "Skipped"}
 
         if not voter_id or not election_id or not post or not candidate_id:
             return {
@@ -37,10 +26,19 @@ if len(candidates) == 1:
                 "body": json.dumps({"message": "Missing required fields"})
             }
 
+        # Fetch config safely
+        config = config_table.get_item(Key={"post_id": post})
+        candidates = config.get("Item", {}).get("candidates", [])
+
+        if len(candidates) == 1:
+            return {
+                "statusCode": 200,
+                "body": json.dumps({"message": "Skipped single candidate vote"})
+            }
+
         pk = f"VOTER#{voter_id}"
         sk = f"{election_id}#{post}"
 
-        # ✅ FIXED CONDITION (IMPORTANT)
         table.put_item(
             Item={
                 "PK": pk,
@@ -59,7 +57,6 @@ if len(candidates) == 1:
     except Exception as e:
         print("ERROR:", str(e))
 
-        # ✅ HANDLE DUPLICATE VOTE
         if "ConditionalCheckFailedException" in str(e):
             return {
                 "statusCode": 400,
