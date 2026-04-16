@@ -5,14 +5,30 @@ table = dynamodb.Table(os.environ['VOTE_TABLE'])
 
 def lambda_handler(event, context):
 
-    res = table.scan()
-    items = res.get("Items", [])
+    items = []
+    last_key = None
+
+    # ✅ FULL SCAN (pagination fix)
+    while True:
+        if last_key:
+            res = table.scan(ExclusiveStartKey=last_key)
+        else:
+            res = table.scan()
+
+        items.extend(res.get("Items", []))
+        last_key = res.get("LastEvaluatedKey")
+
+        if not last_key:
+            break
 
     result = {}
 
     for i in items:
-        post = i['post_id']
-        cand = i['candidate_id']
+        post = i.get('post_id')
+        cand = i.get('candidate_id')
+
+        if not post or not cand:
+            continue  # skip bad data
 
         if post not in result:
             result[post] = {}
