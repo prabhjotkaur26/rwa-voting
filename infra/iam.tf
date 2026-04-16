@@ -85,3 +85,9 @@ resource "aws_iam_role_policy" "lambda_full_access" {
     ]
   })
 }
+resource "aws_lambda_permission" "vote_permission" {
+  statement_id  = "AllowVoteInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.vote.function_name
+  principal     = "apigateway.amazonaws.com"
+}
