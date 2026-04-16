@@ -1,38 +1,74 @@
-import json, boto3, os, jwt, time
+import json, boto3, os, time, jwt
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['OTP_TABLE'])
 
-SECRET = os.environ['JWT_SECRET']
+otp_table = dynamodb.Table(os.environ['OTP_TABLE'])
+
+JWT_SECRET = os.environ['JWT_SECRET']
 
 def lambda_handler(event, context):
+    try:
+        body = event.get("body")
 
-    body = event.get('body')
-    if isinstance(body, str):
-        body = json.loads(body)
+        if isinstance(body, str):
+            body = json.loads(body)
 
-    email = body['email']
-    otp = body['otp']
+        email = body.get("email")
+        otp = body.get("otp")
 
-    res = table.get_item(Key={'email': email})
+        if not email or not otp:
+            return {
+                "statusCode": 400,
+                "body": "Email and OTP required"
+            }
 
-    if 'Item' not in res:
-        return {"statusCode": 400, "body": "Invalid"}
+        # ✅ Fetch OTP
+        res = otp_table.get_item(Key={"email": email})
 
-    item = res['Item']
+        if "Item" not in res:
+            return {
+                "statusCode": 400,
+                "body": "Invalid OTP"
+            }
 
-    if item['used'] or item['otp'] != otp or item['expiry'] < int(time.time()):
-        return {"statusCode": 400, "body": "Invalid OTP"}
+        item = res["Item"]
 
-    table.update_item(
-        Key={'email': email},
-        UpdateExpression="SET used = :u",
-        ExpressionAttributeValues={":u": True}
-    )
+        # ❌ Expired
+        if int(time.time()) > item["expiry"]:
+            return {
+                "statusCode": 400,
+                "body": "OTP expired"
+            }
 
-    token = jwt.encode({"email": email}, SECRET, algorithm="HS256")
+        # ❌ Wrong or used
+        if item["otp"] != otp or item.get("used"):
+            return {
+                "statusCode": 400,
+                "body": "Invalid OTP"
+            }
 
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"token": token})
-    }
+        # ✅ Mark used
+        otp_table.update_item(
+            Key={"email": email},
+            UpdateExpression="SET used = :u",
+            ExpressionAttributeValues={":u": True}
+        )
+
+        # ✅ Generate JWT
+        token = jwt.encode(
+            {"email": email, "exp": int(time.time()) + 3600},
+            JWT_SECRET,
+            algorithm="HS256"
+        )
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"token": token})
+        }
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return {
+            "statusCode": 500,
+            "body": str(e)
+        }
