@@ -2,8 +2,9 @@ import json
 import boto3
 import os
 import csv
-from io import StringIO, BytesIO
+from io import StringIO
 from datetime import datetime
+from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.client('s3')
@@ -27,11 +28,11 @@ def lambda_handler(event, context):
         if auth != "admin":
             return {
                 "statusCode": 403,
-                "body": "Admin only"
+                "body": json.dumps({"message": "Admin only"})
             }
 
         # -----------------------------
-        # BODY
+        # BODY PARSE
         # -----------------------------
         body = event.get("body") or "{}"
 
@@ -43,14 +44,14 @@ def lambda_handler(event, context):
         if not post_id:
             return {
                 "statusCode": 400,
-                "body": "post_id required"
+                "body": json.dumps({"message": "post_id required"})
             }
 
         # -----------------------------
-        # GET VOTES
+        # FETCH VOTES (FIXED QUERY)
         # -----------------------------
         response = vote_table.query(
-            KeyConditionExpression=boto3.dynamodb.conditions.Key("post_id").eq(post_id)
+            KeyConditionExpression=Key("post_id").eq(post_id)
         )
 
         votes = response.get("Items", [])
@@ -58,11 +59,11 @@ def lambda_handler(event, context):
         if not votes:
             return {
                 "statusCode": 404,
-                "body": "No votes found"
+                "body": json.dumps({"message": "No votes found"})
             }
 
         # -----------------------------
-        # COUNT
+        # COUNT VOTES
         # -----------------------------
         result = {}
 
@@ -71,7 +72,7 @@ def lambda_handler(event, context):
             result[cid] = result.get(cid, 0) + 1
 
         # -----------------------------
-        # CSV
+        # CSV GENERATION
         # -----------------------------
         csv_buffer = StringIO()
         writer = csv.writer(csv_buffer)
@@ -83,20 +84,35 @@ def lambda_handler(event, context):
 
         csv_key = f"exports/{post_id}_{int(datetime.utcnow().timestamp())}.csv"
 
+        # -----------------------------
+        # UPLOAD TO S3
+        # -----------------------------
         s3.put_object(
             Bucket=BUCKET,
             Key=csv_key,
-            Body=csv_buffer.getvalue()
+            Body=csv_buffer.getvalue(),
+            ContentType="text/csv"
         )
 
         # -----------------------------
-        # RETURN ONLY CSV (NO PDF for now)
+        # ✅ GENERATE SECURE URL (FIX)
         # -----------------------------
-        url = f"https://{BUCKET}.s3.amazonaws.com/{csv_key}"
+        url = s3.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': BUCKET,
+                'Key': csv_key
+            },
+            ExpiresIn=3600  # 1 hour
+        )
 
+        # -----------------------------
+        # RESPONSE
+        # -----------------------------
         return {
             "statusCode": 200,
             "body": json.dumps({
+                "message": "Export successful",
                 "csv": url
             })
         }
