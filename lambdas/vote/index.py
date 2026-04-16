@@ -47,12 +47,11 @@ def lambda_handler(event, context):
         # -----------------------------
         body = event.get("body") or "{}"
 
-        if isinstance(body, str):
-            body = json.loads(body)
+if isinstance(body, str):
+    body = json.loads(body)
 
-        post_id = body.get("postId")
-        candidate_id = body.get("candidateId")
-
+post_id = body.get("postId") or body.get("post_id")
+candidate_id = body.get("candidateId") or body.get("candidate_id")
         if not post_id or not candidate_id:
             return {
                 "statusCode": 400,
