@@ -13,13 +13,13 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# CloudWatch logs
+# ✅ CloudWatch Logs
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# DynamoDB + SES permissions (restricted to tables)
+# ✅ Custom Policy (DynamoDB + SES + S3)
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "lambda-custom-policy"
   role = aws_iam_role.lambda_role.id
@@ -28,6 +28,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
     Version = "2012-10-17"
     Statement = [
 
+      # 🔹 DynamoDB
       {
         Effect = "Allow"
         Action = [
@@ -40,6 +41,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Resource = "*"
       },
 
+      # 🔹 SES
       {
         Effect = "Allow"
         Action = [
@@ -47,7 +49,18 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "ses:SendRawEmail"
         ]
         Resource = "*"
+      },
+
+      # 🔹 S3 (EXPORT FIX)
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject"
+        ]
+        Resource = "${aws_s3_bucket.candidate_images.arn}/*"
       }
+
     ]
   })
 }
