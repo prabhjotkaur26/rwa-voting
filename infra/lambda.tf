@@ -90,6 +90,7 @@ resource "aws_lambda_function" "admin" {
   environment {
     variables = {
       VOTE_TABLE = aws_dynamodb_table.votes.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
     }
   }
 }
