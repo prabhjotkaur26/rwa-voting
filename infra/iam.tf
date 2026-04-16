@@ -13,13 +13,13 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# ✅ Basic logs permission
+# CloudWatch logs
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# ✅ DynamoDB + SES access
+# DynamoDB + SES permissions (restricted to tables)
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "lambda-custom-policy"
   role = aws_iam_role.lambda_role.id
@@ -34,7 +34,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "dynamodb:PutItem",
           "dynamodb:GetItem",
           "dynamodb:Scan",
-          "dynamodb:UpdateItem"
+          "dynamodb:UpdateItem",
+          "dynamodb:Query"
         ]
         Resource = "*"
       },
