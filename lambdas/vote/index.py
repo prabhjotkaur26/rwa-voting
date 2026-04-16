@@ -56,6 +56,15 @@ def lambda_handler(event, context):
                 "statusCode": 400,
                 "body": json.dumps({"message": "postId and candidateId required"})
             }
+            voter_table = dynamodb.Table(os.environ['VOTER_TABLE'])
+
+voter = voter_table.get_item(Key={"email": email})
+
+if "Item" not in voter:
+    return {
+        "statusCode": 403,
+        "body": json.dumps({"message": "Not a registered voter"})
+    }
 
         # Insert vote with duplicate protection
         try:
