@@ -3,6 +3,7 @@ import boto3
 import os
 import jwt
 from datetime import datetime
+from botocore.exceptions import ClientError
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -14,11 +15,7 @@ def lambda_handler(event, context):
     try:
         print("EVENT:", event)
 
-        # -----------------------------
-        # 1. HEADERS SAFE READ
-        # -----------------------------
         headers = event.get("headers") or {}
-
         auth_header = headers.get("Authorization") or headers.get("authorization")
 
         if not auth_header:
@@ -29,9 +26,6 @@ def lambda_handler(event, context):
 
         token = auth_header.replace("Bearer ", "").strip()
 
-        # -----------------------------
-        # 2. JWT VERIFY
-        # -----------------------------
         try:
             decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
             email = decoded.get("email")
@@ -39,7 +33,7 @@ def lambda_handler(event, context):
             if not email:
                 return {
                     "statusCode": 401,
-                    "body": json.dumps({"message": "Invalid token payload"})
+                    "body": json.dumps({"message": "Invalid token"})
                 }
 
         except Exception as e:
@@ -48,9 +42,7 @@ def lambda_handler(event, context):
                 "body": json.dumps({"message": f"Invalid token: {str(e)}"})
             }
 
-        # -----------------------------
-        # 3. BODY PARSE SAFE
-        # -----------------------------
+        # Body parsing
         body = event.get("body") or "{}"
 
         if isinstance(body, str):
@@ -65,18 +57,27 @@ def lambda_handler(event, context):
                 "body": json.dumps({"message": "postId and candidateId required"})
             }
 
-        # -----------------------------
-        # 4. INSERT VOTE
-        # -----------------------------
-       vote_table.put_item(
-    Item={
-        "post_id": post_id,
-        "voter_id": email,
-        "candidate_id": candidate_id,
-        "timestamp": datetime.utcnow().isoformat()
-    },
-    ConditionExpression="attribute_not_exists(post_id)"
-)
+        # Insert vote with duplicate protection
+        try:
+            vote_table.put_item(
+                Item={
+                    "post_id": post_id,
+                    "voter_id": email,
+                    "candidate_id": candidate_id,
+                    "timestamp": datetime.utcnow().isoformat()
+                },
+                ConditionExpression="attribute_not_exists(post_id)"
+            )
+
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                return {
+                    "statusCode": 400,
+                    "body": json.dumps({"message": "You already voted for this post"})
+                }
+            else:
+                raise e
+
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "Vote cast successfully"})
@@ -84,13 +85,6 @@ def lambda_handler(event, context):
 
     except Exception as e:
         print("ERROR:", str(e))
-
-        if "ConditionalCheckFailedException" in str(e):
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"message": "You already voted for this post"})
-            }
-
         return {
             "statusCode": 500,
             "body": json.dumps({
