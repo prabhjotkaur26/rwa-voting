@@ -75,9 +75,6 @@ def lambda_handler(event, context):
         "timestamp": datetime.utcnow().isoformat()
     }
 )
-            ConditionExpression="attribute_not_exists(voteId)"
-        )
-
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "Vote cast successfully"})
