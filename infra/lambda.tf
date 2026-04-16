@@ -96,12 +96,6 @@ resource "aws_lambda_function" "admin" {
 }
 
 # EXPORT
-data "archive_file" "export_zip" {
-  type        = "zip"
-  source_dir  = "../lambdas/export"
-  output_path = "export.zip"
-}
-
 resource "aws_lambda_function" "export" {
   function_name = "export-function"
   role          = aws_iam_role.lambda_role.arn
@@ -113,8 +107,10 @@ resource "aws_lambda_function" "export" {
 
   environment {
     variables = {
-      VOTE_TABLE = aws_dynamodb_table.votes.name
-      BUCKET     = aws_s3_bucket.candidate_images.bucket
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
+      BUCKET       = aws_s3_bucket.candidate_images.bucket
+      JWT_SECRET   = "mysecret123"
     }
   }
 }
