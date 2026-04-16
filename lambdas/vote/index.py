@@ -8,6 +8,8 @@ from botocore.exceptions import ClientError
 dynamodb = boto3.resource('dynamodb')
 
 vote_table = dynamodb.Table(os.environ['VOTE_TABLE'])
+voter_table = dynamodb.Table(os.environ['VOTER_TABLE'])
+
 JWT_SECRET = os.environ['JWT_SECRET']
 
 
@@ -15,6 +17,9 @@ def lambda_handler(event, context):
     try:
         print("EVENT:", event)
 
+        # -----------------------------
+        # AUTH
+        # -----------------------------
         headers = event.get("headers") or {}
         auth_header = headers.get("Authorization") or headers.get("authorization")
 
@@ -42,7 +47,9 @@ def lambda_handler(event, context):
                 "body": json.dumps({"message": f"Invalid token: {str(e)}"})
             }
 
-        # Body parsing
+        # -----------------------------
+        # BODY PARSE
+        # -----------------------------
         body = event.get("body") or "{}"
 
         if isinstance(body, str):
@@ -56,17 +63,21 @@ def lambda_handler(event, context):
                 "statusCode": 400,
                 "body": json.dumps({"message": "postId and candidateId required"})
             }
-            voter_table = dynamodb.Table(os.environ['VOTER_TABLE'])
 
-voter = voter_table.get_item(Key={"email": email})
+        # -----------------------------
+        # VOTER VALIDATION (IMPORTANT)
+        # -----------------------------
+        voter = voter_table.get_item(Key={"email": email})
 
-if "Item" not in voter:
-    return {
-        "statusCode": 403,
-        "body": json.dumps({"message": "Not a registered voter"})
-    }
+        if "Item" not in voter:
+            return {
+                "statusCode": 403,
+                "body": json.dumps({"message": "Not a registered voter"})
+            }
 
-        # Insert vote with duplicate protection
+        # -----------------------------
+        # INSERT VOTE (NO DUPLICATE)
+        # -----------------------------
         try:
             vote_table.put_item(
                 Item={
