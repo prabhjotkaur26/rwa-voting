@@ -75,7 +75,7 @@ def lambda_handler(event, context):
         "candidate_id": candidate_id,
         "timestamp": datetime.utcnow().isoformat()
     },
-    ConditionExpression="attribute_not_exists(voter_id)"
+    ConditionExpression="attribute_not_exists(post_id)"
 )
         return {
             "statusCode": 200,
