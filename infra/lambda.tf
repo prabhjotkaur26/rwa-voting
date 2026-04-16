@@ -94,7 +94,12 @@ resource "aws_lambda_function" "admin" {
     }
   }
 }
-
+# EXPORT ZIP
+data "archive_file" "export_zip" {
+  type        = "zip"
+  source_dir  = "../lambdas/export"
+  output_path = "export.zip"
+}
 # EXPORT
 resource "aws_lambda_function" "export" {
   function_name = "export-function"
