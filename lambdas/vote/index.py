@@ -7,7 +7,6 @@ from datetime import datetime
 dynamodb = boto3.resource('dynamodb')
 
 vote_table = dynamodb.Table(os.environ['VOTE_TABLE'])
-
 JWT_SECRET = os.environ['JWT_SECRET']
 
 
@@ -18,7 +17,7 @@ def lambda_handler(event, context):
         # -----------------------------
         # 1. HEADERS SAFE READ
         # -----------------------------
-        headers = event.get("headers", {})
+        headers = event.get("headers") or {}
 
         auth_header = headers.get("Authorization") or headers.get("authorization")
 
@@ -35,7 +34,14 @@ def lambda_handler(event, context):
         # -----------------------------
         try:
             decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            email = decoded["email"]
+            email = decoded.get("email")
+
+            if not email:
+                return {
+                    "statusCode": 401,
+                    "body": json.dumps({"message": "Invalid token payload"})
+                }
+
         except Exception as e:
             return {
                 "statusCode": 401,
@@ -47,11 +53,12 @@ def lambda_handler(event, context):
         # -----------------------------
         body = event.get("body") or "{}"
 
-if isinstance(body, str):
-    body = json.loads(body)
+        if isinstance(body, str):
+            body = json.loads(body)
 
-post_id = body.get("postId") or body.get("post_id")
-candidate_id = body.get("candidateId") or body.get("candidate_id")
+        post_id = body.get("postId") or body.get("post_id")
+        candidate_id = body.get("candidateId") or body.get("candidate_id")
+
         if not post_id or not candidate_id:
             return {
                 "statusCode": 400,
@@ -59,21 +66,17 @@ candidate_id = body.get("candidateId") or body.get("candidate_id")
             }
 
         # -----------------------------
-        # 4. UNIQUE VOTE KEY
-        # -----------------------------
-        vote_id = f"{email}#{post_id}"
-
-        # -----------------------------
-        # 5. INSERT VOTE (NO DUPLICATE)
+        # 4. INSERT VOTE
         # -----------------------------
         vote_table.put_item(
-    Item={
-        "post_id": post_id,
-        "voter_id": email,
-        "candidate_id": candidate_id,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-)
+            Item={
+                "post_id": post_id,
+                "voter_id": email,
+                "candidate_id": candidate_id,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        )
+
         return {
             "statusCode": 200,
             "body": json.dumps({"message": "Vote cast successfully"})
@@ -90,5 +93,8 @@ candidate_id = body.get("candidateId") or body.get("candidate_id")
 
         return {
             "statusCode": 500,
-            "body": json.dumps({"message": "Internal server error", "error": str(e)})
+            "body": json.dumps({
+                "message": "Internal server error",
+                "error": str(e)
+            })
         }
