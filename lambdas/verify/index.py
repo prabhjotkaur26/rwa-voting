@@ -71,7 +71,7 @@ def lambda_handler(event, context):
         # -----------------------------
         # ADMIN LOGIC
         # -----------------------------
-        is_admin = True if email == "admin@gmail.com" else False
+        is_admin = True if email == "prabhjot582004@gmail.com" else False
 
         # -----------------------------
         # GENERATE JWT
