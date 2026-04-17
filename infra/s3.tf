@@ -8,7 +8,7 @@ resource "aws_s3_bucket" "candidate_images" {
   }
 }
 
-# ✅ BLOCK PUBLIC ACCESS (VERY IMPORTANT)
+# ✅ BLOCK PUBLIC ACCESS (SECURE)
 resource "aws_s3_bucket_public_access_block" "block" {
   bucket = aws_s3_bucket.candidate_images.id
 
@@ -18,7 +18,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
   restrict_public_buckets = true
 }
 
-# ✅ ENABLE VERSIONING (BEST PRACTICE)
+# ✅ VERSIONING (SAFE STORAGE)
 resource "aws_s3_bucket_versioning" "versioning" {
   bucket = aws_s3_bucket.candidate_images.id
 
@@ -27,7 +27,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
   }
 }
 
-# ✅ ENABLE ENCRYPTION
+# ✅ ENCRYPTION (SECURITY)
 resource "aws_s3_bucket_server_side_encryption_configuration" "enc" {
   bucket = aws_s3_bucket.candidate_images.id
 
