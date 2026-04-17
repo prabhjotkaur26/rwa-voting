@@ -9,10 +9,10 @@ resource "aws_dynamodb_table" "voters" {
   name         = "rwa-voters"
   billing_mode = "PAY_PER_REQUEST"
 
-  hash_key = "mobile"
+  hash_key = "email"
 
   attribute {
-    name = "mobile"
+    name = "email"
     type = "S"
   }
 
