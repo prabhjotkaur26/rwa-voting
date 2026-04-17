@@ -150,12 +150,17 @@ data "archive_file" "download_zip" {
   source_file = "${path.module}/download.py"
   output_path = "${path.module}/download.zip"
 }
+
 resource "aws_lambda_function" "download" {
   function_name = "download"
   role          = aws_iam_role.lambda_role.arn
 
-  handler       = "download.lambda_handler"
-  runtime       = "python3.11"
+  handler = "download.lambda_handler"
+  runtime = "python3.11"
+
+  # ✅ THIS WAS MISSING (MAIN FIX)
+  filename         = data.archive_file.download_zip.output_path
+  source_code_hash = data.archive_file.download_zip.output_base64sha256
 
   environment {
     variables = {
