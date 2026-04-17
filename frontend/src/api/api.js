@@ -1,25 +1,14 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+import axios from "axios";
 
-export const sendOtp = async (email) => {
-  const res = await fetch(`${BASE_URL}/send-otp`, {
-    method: "POST",
-    body: JSON.stringify({ email }),
-  });
-  return res.json();
-};
+const API = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL
+});
 
-export const verifyOtp = async (email, otp) => {
-  const res = await fetch(`${BASE_URL}/verify-otp`, {
-    method: "POST",
-    body: JSON.stringify({ email, otp }),
-  });
-  return res.json();
-};
+export const sendOTP = (mobile) => API.post("/auth/send-otp", { mobile });
+export const verifyOTP = (mobile, otp) => API.post("/auth/verify-otp", { mobile, otp });
 
-export const vote = async (data) => {
-  const res = await fetch(`${BASE_URL}/vote`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  return res.json();
-};
+export const getElection = () => API.get("/election");
+export const getCandidates = (postId) => API.get(`/candidates/${postId}`);
+export const submitVote = (data) => API.post("/vote", data);
+
+export const getResults = () => API.get("/results");
