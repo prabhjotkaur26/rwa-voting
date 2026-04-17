@@ -74,7 +74,7 @@ resource "aws_dynamodb_table" "votes1" {
 # S3 Bucket (Frontend Hosting)
 # -------------------------------
 resource "aws_s3_bucket" "frontend" {
-  bucket = "rwa-frontend-bucket-12345"
+  bucket = "rwa-frontend-bucket-123456"
 
   tags = {
     Project = "RWA-Voting"
