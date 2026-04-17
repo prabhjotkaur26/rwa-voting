@@ -1,8 +1,5 @@
-# ---------------- DYNAMODB ----------------
-resource "aws_dynamodb_table" "votes" {
-  name         = "${var.project_name}-votes3"
-  billing_mode = "PAY_PER_REQUEST"
 
+<<<<<<< HEAD
   hash_key  = "PK"
   range_key = "SK"
 
@@ -307,3 +304,5 @@ resource "aws_lambda_permission" "results" {
   function_name = aws_lambda_function.results.function_name
   principal     = "apigateway.amazonaws.com"
 }
+=======
+>>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
