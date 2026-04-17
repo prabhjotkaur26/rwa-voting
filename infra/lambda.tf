@@ -145,16 +145,16 @@ resource "aws_lambda_function" "results" {
     }
   }
 }
+# Download
 data "archive_file" "download_zip" {
   type        = "zip"
-  source_file = abspath("${path.module}/lambdas/download/download.py")
-  output_path = "${path.module}/download.zip"
+  source_file = "../lambdas/download/download.py"
+  output_path = "download.zip"
 }
 
 resource "aws_lambda_function" "download" {
   function_name = "download"
   role          = aws_iam_role.lambda_role.arn
-
   handler = "download.lambda_handler"
   runtime = "python3.11"
 
