@@ -1,19 +1,18 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import Login from "./pages/Login";
-import VerifyOTP from "./pages/VerifyOTP";
+import VerifyOtp from "./pages/VerifyOtp";
 import Vote from "./pages/Vote";
-import Admin from "./pages/Admin";
 
-export default function App() {
+function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/verify" element={<VerifyOTP />} />
+        <Route path="/verify" element={<VerifyOtp />} />
         <Route path="/vote" element={<Vote />} />
-        <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
+export default App;
