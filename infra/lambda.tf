@@ -158,7 +158,7 @@ resource "aws_lambda_function" "download" {
 
   environment {
     variables = {
-      BUCKET = aws_s3_bucket.your_bucket.id
+      BUCKET = aws_s3_bucket.candidate_images.bucket
     }
   }
 }
