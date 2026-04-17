@@ -18,7 +18,7 @@ export default function Login() {
         <h1 className="text-2xl font-bold mb-4">RWA Voting Login</h1>
         <input
           className="w-full p-2 border rounded"
-          placeholder="Enter Mobile Number"
+          placeholder="Enter Email ID"
           onChange={(e) => setMobile(e.target.value)}
         />
         <button
