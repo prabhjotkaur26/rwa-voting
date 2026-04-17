@@ -50,6 +50,11 @@ resource "aws_apigatewayv2_integration" "export" {
   integration_type = "AWS_PROXY"
   integration_uri  = aws_lambda_function.export.invoke_arn
 }
+resource "aws_apigatewayv2_integration" "download" {
+  api_id           = aws_apigatewayv2_api.api.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.download.invoke_arn
+}
 
 # -----------------------------
 # ROUTES
@@ -89,7 +94,11 @@ resource "aws_apigatewayv2_route" "export" {
   route_key = "POST /export"
   target    = "integrations/${aws_apigatewayv2_integration.export.id}"
 }
-
+resource "aws_apigatewayv2_route" "download" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "GET /download"
+  target    = "integrations/${aws_apigatewayv2_integration.download.id}"
+}
 # -----------------------------
 # PERMISSIONS (VERY IMPORTANT)
 # -----------------------------
@@ -125,6 +134,12 @@ resource "aws_lambda_permission" "admin" {
   statement_id  = "AllowAPIGatewayAdmin"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.admin.function_name
+  principal     = "apigateway.amazonaws.com"
+}
+resource "aws_lambda_permission" "download" {
+  statement_id  = "AllowAPIGatewayDownload"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.download.function_name
   principal     = "apigateway.amazonaws.com"
 }
 
