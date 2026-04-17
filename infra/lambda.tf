@@ -157,10 +157,6 @@ resource "aws_lambda_function" "download" {
   handler       = "download.lambda_handler"
   runtime       = "python3.11"
 
-  filename      = "download.zip"
-
-  source_code_hash = filebase64sha256("download.zip")
-
   environment {
     variables = {
       BUCKET = aws_s3_bucket.candidate_images.bucket
