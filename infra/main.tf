@@ -5,7 +5,7 @@ provider "aws" {
 # -------------------------------
 # DynamoDB: Voter Registry
 # -------------------------------
-resource "aws_dynamodb_table" "voters" {
+resource "aws_dynamodb_table" "voters1" {
   name         = "rwa-voters"
   billing_mode = "PAY_PER_REQUEST"
 
@@ -24,7 +24,7 @@ resource "aws_dynamodb_table" "voters" {
 # -------------------------------
 # DynamoDB: OTP Table (Email-based)
 # -------------------------------
-resource "aws_dynamodb_table" "otp" {
+resource "aws_dynamodb_table" "otp1" {
   name         = "rwa-otp"
   billing_mode = "PAY_PER_REQUEST"
 
@@ -48,7 +48,7 @@ resource "aws_dynamodb_table" "otp" {
 # -------------------------------
 # DynamoDB: Votes Table
 # -------------------------------
-resource "aws_dynamodb_table" "votes" {
+resource "aws_dynamodb_table" "votes1" {
   name         = "rwa-votes"
   billing_mode = "PAY_PER_REQUEST"
 
