@@ -150,7 +150,7 @@ resource "aws_lambda_function" "results" {
 # =========================
 data "archive_file" "download_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/lambdas/downloads"
+  source_dir  = "${path.module}/lambdas/download"
   output_path = "${path.module}/download.zip"
 }
 
