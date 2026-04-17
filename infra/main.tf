@@ -1,6 +1,4 @@
-
-<<<<<<< HEAD
-  hash_key  = "PK"
+ hash_key  = "PK"
   range_key = "SK"
 
   attribute {
