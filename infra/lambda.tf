@@ -145,6 +145,11 @@ resource "aws_lambda_function" "results" {
     }
   }
 }
+data "archive_file" "download_zip" {
+  type        = "zip"
+  source_file = "${path.module}/download.py"
+  output_path = "${path.module}/download.zip"
+}
 resource "aws_lambda_function" "download" {
   function_name = "download"
   role          = aws_iam_role.lambda_role.arn
