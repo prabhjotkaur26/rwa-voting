@@ -1,128 +1,58 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { sendOtp } from "../api/api";
 
 export default function Login() {
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1); // 1 = send otp, 2 = verify otp
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-
-  // 📤 SEND OTP
-  const sendOTP = async () => {
-    if (!mobileNumber) return alert("Enter mobile number");
-
-    try {
-      const res = await fetch("http://localhost:5000/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber })
-      });
-
-      const data = await res.json();
-      alert(data.message || "OTP sent");
-      setStep(2);
-
-    } catch (err) {
-      alert("Error sending OTP");
+  const handleSendOtp = async () => {
+    if (!email || !email.includes("@")) {
+      alert("Enter valid email");
+      return;
     }
-  };
-
-  // 🔐 VERIFY OTP
-  const verifyOTP = async () => {
-    if (!otp) return alert("Enter OTP");
 
     try {
-      const res = await fetch("http://localhost:5000/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber, otp })
-      });
+      setLoading(true);
 
-      const data = await res.json();
+      const res = await sendOtp(email);
 
-      if (!res.ok) {
-        return alert(data.message || "Invalid OTP");
-      }
+      alert(res.message || "OTP sent");
 
-      // store session
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("email", email);
 
-      alert("Login successful ✅");
-      navigate("/vote");
+      window.location.href = "/verify";
 
     } catch (err) {
-      alert("Server error");
+      alert("Failed to send OTP");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2>🗳️ OTP Secure Voting Login</h2>
+    <div className="h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
+      <div className="bg-white p-6 rounded-xl shadow-lg w-80">
 
-        {/* STEP 1: MOBILE INPUT */}
-        {step === 1 && (
-          <>
-            <input
-              placeholder="Enter Mobile Number"
-              style={styles.input}
-              onChange={(e) => setMobileNumber(e.target.value)}
-            />
+        <h1 className="text-xl font-bold mb-4 text-center">
+          Login
+        </h1>
 
-            <button style={styles.button} onClick={sendOTP}>
-              Send OTP
-            </button>
-          </>
-        )}
+        <input
+          className="w-full p-2 border rounded mb-4"
+          placeholder="Enter Email"
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        {/* STEP 2: OTP INPUT */}
-        {step === 2 && (
-          <>
-            <input
-              placeholder="Enter OTP"
-              style={styles.input}
-              onChange={(e) => setOtp(e.target.value)}
-            />
+        <button
+          onClick={handleSendOtp}
+          disabled={loading}
+          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {loading ? "Sending..." : "Send OTP"}
+        </button>
 
-            <button style={styles.button} onClick={verifyOTP}>
-              Verify & Login
-            </button>
-          </>
-        )}
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "80vh"
-  },
-  card: {
-    background: "white",
-    padding: 30,
-    borderRadius: 12,
-    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-    textAlign: "center",
-    width: 300
-  },
-  input: {
-    padding: 10,
-    width: "100%",
-    marginTop: 10,
-    marginBottom: 10
-  },
-  button: {
-    background: "#4f46e5",
-    color: "white",
-    padding: 10,
-    border: "none",
-    width: "100%",
-    borderRadius: 6,
-    cursor: "pointer"
-  }
-};

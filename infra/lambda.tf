@@ -1,4 +1,6 @@
-# AUTH
+########################################
+# AUTH LAMBDA
+########################################
 data "archive_file" "auth_zip" {
   type        = "zip"
   source_dir  = "../lambdas/auth"
@@ -19,11 +21,14 @@ resource "aws_lambda_function" "auth" {
       OTP_TABLE    = aws_dynamodb_table.otp.name
       VOTER_TABLE  = aws_dynamodb_table.voters.name
       SENDER_EMAIL = "prabh008968@gmail.com"
+      JWT_SECRET   = "mysecret123"
     }
   }
 }
 
-# VERIFY
+########################################
+# VERIFY LAMBDA
+########################################
 data "archive_file" "verify_zip" {
   type        = "zip"
   source_dir  = "../lambdas/verify"
@@ -47,7 +52,9 @@ resource "aws_lambda_function" "verify" {
   }
 }
 
-# VOTE
+########################################
+# VOTE LAMBDA
+########################################
 data "archive_file" "vote_zip" {
   type        = "zip"
   source_dir  = "../lambdas/vote"
@@ -65,14 +72,16 @@ resource "aws_lambda_function" "vote" {
 
   environment {
     variables = {
-      VOTE_TABLE = aws_dynamodb_table.votes.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
       VOTER_TABLE  = aws_dynamodb_table.voters.name
-      JWT_SECRET = "mysecret123"
+      JWT_SECRET   = "mysecret123"
     }
   }
 }
 
-# ADMIN
+########################################
+# ADMIN LAMBDA
+########################################
 data "archive_file" "admin_zip" {
   type        = "zip"
   source_dir  = "../lambdas/admin"
@@ -90,19 +99,23 @@ resource "aws_lambda_function" "admin" {
 
   environment {
     variables = {
-      VOTE_TABLE = aws_dynamodb_table.votes.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
       VOTER_TABLE  = aws_dynamodb_table.voters.name
       CONFIG_TABLE = aws_dynamodb_table.election.name
+      JWT_SECRET   = "mysecret123"
     }
   }
 }
-# EXPORT ZIP
+
+########################################
+# EXPORT LAMBDA
+########################################
 data "archive_file" "export_zip" {
   type        = "zip"
   source_dir  = "../lambdas/export"
   output_path = "export.zip"
 }
-# EXPORT
+
 resource "aws_lambda_function" "export" {
   function_name = "export-function"
   role          = aws_iam_role.lambda_role.arn
@@ -115,13 +128,41 @@ resource "aws_lambda_function" "export" {
   environment {
     variables = {
       VOTE_TABLE   = aws_dynamodb_table.votes.name
-      CONFIG_TABLE = aws_dynamodb_table.election.name
-      BUCKET       = aws_s3_bucket.candidate_images.bucket
-      JWT_SECRET   = "mysecret123"
+      CONFIG_TABLE  = aws_dynamodb_table.election.name
+      BUCKET        = aws_s3_bucket.candidate_images.bucket
+      JWT_SECRET    = "mysecret123"
     }
   }
 }
-# RESULTS
+
+########################################
+# DOWNLOAD LAMBDA
+########################################
+data "archive_file" "download_zip" {
+  type        = "zip"
+  source_file = "../lambdas/download/download.py"
+  output_path = "download.zip"
+}
+
+resource "aws_lambda_function" "download" {
+  function_name = "download-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "download.lambda_handler"
+  runtime       = "python3.11"
+
+  filename         = data.archive_file.download_zip.output_path
+  source_code_hash = data.archive_file.download_zip.output_base64sha256
+
+  environment {
+    variables = {
+      BUCKET = aws_s3_bucket.candidate_images.bucket
+    }
+  }
+}
+
+########################################
+# RESULTS LAMBDA (FINAL - CLEAN POSITION)
+########################################
 data "archive_file" "results_zip" {
   type        = "zip"
   source_dir  = "../lambdas/results"
@@ -140,30 +181,8 @@ resource "aws_lambda_function" "results" {
   environment {
     variables = {
       VOTE_TABLE   = aws_dynamodb_table.votes.name
-      CONFIG_TABLE = aws_dynamodb_table.election.name
-      JWT_SECRET   = "mysecret123"
-    }
-  }
-}
-# Download
-data "archive_file" "download_zip" {
-  type        = "zip"
-  source_file = "../lambdas/download/download.py"
-  output_path = "download.zip"
-}
-
-resource "aws_lambda_function" "download" {
-  function_name = "download"
-  role          = aws_iam_role.lambda_role.arn
-  handler = "download.lambda_handler"
-  runtime = "python3.11"
-
-  filename         = data.archive_file.download_zip.output_path
-  source_code_hash = data.archive_file.download_zip.output_base64sha256
-
-  environment {
-    variables = {
-      BUCKET = aws_s3_bucket.candidate_images.bucket
+      CONFIG_TABLE  = aws_dynamodb_table.election.name
+      JWT_SECRET    = "mysecret123"
     }
   }
 }

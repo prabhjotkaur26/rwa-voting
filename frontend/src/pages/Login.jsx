@@ -1,128 +1,55 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { sendOtp } from "../api/api";
 
 export default function Login() {
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1); // 1 = send otp, 2 = verify otp
+  const [email, setEmail] = useState("");
 
-  const navigate = useNavigate();
+  const handleSendOtp = async () => {
+    if (!email) return alert("Enter email");
 
-  // 📤 SEND OTP
-  const sendOTP = async () => {
-    if (!mobileNumber) return alert("Enter mobile number");
-
-    try {
-      const res = await fetch("http://localhost:5000/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber })
-      });
-
-      const data = await res.json();
-      alert(data.message || "OTP sent");
-      setStep(2);
-
-    } catch (err) {
-      alert("Error sending OTP");
-    }
-  };
-
-  // 🔐 VERIFY OTP
-  const verifyOTP = async () => {
-    if (!otp) return alert("Enter OTP");
-
-    try {
-      const res = await fetch("http://localhost:5000/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobileNumber, otp })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        return alert(data.message || "Invalid OTP");
-      }
-
-      // store session
-      localStorage.setItem("token", data.token);
-
-      alert("Login successful ✅");
-      navigate("/vote");
-
-    } catch (err) {
-      alert("Server error");
-    }
+    const res = await sendOtp(email);
+    alert(res.message);
+    localStorage.setItem("email", email);
+    window.location.href = "/verify";
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2>🗳️ OTP Secure Voting Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81]">
 
-        {/* STEP 1: MOBILE INPUT */}
-        {step === 1 && (
-          <>
-            <input
-              placeholder="Enter Mobile Number"
-              style={styles.input}
-              onChange={(e) => setMobileNumber(e.target.value)}
-            />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-[380px] p-8 rounded-2xl backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl"
+      >
 
-            <button style={styles.button} onClick={sendOTP}>
-              Send OTP
-            </button>
-          </>
-        )}
+        <h1 className="text-white text-2xl font-bold text-center mb-2">
+          OTP Secure Voting
+        </h1>
 
-        {/* STEP 2: OTP INPUT */}
-        {step === 2 && (
-          <>
-            <input
-              placeholder="Enter OTP"
-              style={styles.input}
-              onChange={(e) => setOtp(e.target.value)}
-            />
+        <p className="text-gray-300 text-sm text-center mb-6">
+          Enter your email to continue voting
+        </p>
 
-            <button style={styles.button} onClick={verifyOTP}>
-              Verify & Login
-            </button>
-          </>
-        )}
-      </div>
+        <input
+          type="email"
+          placeholder="Enter Email"
+          className="w-full p-3 rounded-xl bg-white/10 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <button
+          onClick={handleSendOtp}
+          className="w-full mt-5 p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold hover:scale-105 transition"
+        >
+          Send OTP
+        </button>
+
+        <p className="text-xs text-gray-400 text-center mt-4">
+          Secure • Transparent • RWA Voting System
+        </p>
+
+      </motion.div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "80vh"
-  },
-  card: {
-    background: "white",
-    padding: 30,
-    borderRadius: 12,
-    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-    textAlign: "center",
-    width: 300
-  },
-  input: {
-    padding: 10,
-    width: "100%",
-    marginTop: 10,
-    marginBottom: 10
-  },
-  button: {
-    background: "#4f46e5",
-    color: "white",
-    padding: 10,
-    border: "none",
-    width: "100%",
-    borderRadius: 6,
-    cursor: "pointer"
-  }
-};

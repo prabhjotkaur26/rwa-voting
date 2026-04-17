@@ -1,6 +1,7 @@
 import json
 import boto3
 import os
+import jwt
 from boto3.dynamodb.conditions import Key
 
 dynamodb = boto3.resource('dynamodb')
@@ -8,21 +9,47 @@ dynamodb = boto3.resource('dynamodb')
 vote_table = dynamodb.Table(os.environ['VOTE_TABLE'])
 config_table = dynamodb.Table(os.environ['CONFIG_TABLE'])
 
+JWT_SECRET = os.environ.get("JWT_SECRET", "mysecret")
 
+
+# -----------------------------
+# JWT ROLE VALIDATION
+# -----------------------------
+def get_user_role(event):
+    headers = event.get("headers") or {}
+
+    token = headers.get("Authorization") or headers.get("authorization")
+
+    if not token:
+        return None
+
+    # Remove "Bearer " if present
+    if token.startswith("Bearer "):
+        token = token.replace("Bearer ", "")
+
+    try:
+        decoded = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        return decoded.get("role")
+    except Exception as e:
+        print("JWT ERROR:", str(e))
+        return None
+
+
+# -----------------------------
+# MAIN HANDLER
+# -----------------------------
 def lambda_handler(event, context):
     try:
         print("EVENT:", event)
 
         # -----------------------------
-        # SIMPLE ADMIN CHECK (NO JWT)
+        # ROLE CHECK (SECURE)
         # -----------------------------
-        headers = event.get("headers") or {}
-        auth = headers.get("Authorization") or headers.get("authorization")
-
-        is_admin = auth == "admin"
+        role = get_user_role(event)
+        is_admin = role == "admin"
 
         # -----------------------------
-        # BODY PARSE
+        # PARSE BODY
         # -----------------------------
         body = event.get("body") or "{}"
 
@@ -45,14 +72,17 @@ def lambda_handler(event, context):
 
         status = item.get("status", "ACTIVE")
 
+        # Only admin can see before CLOSED
         if not is_admin and status != "CLOSED":
             return {
                 "statusCode": 403,
-                "body": json.dumps({"message": "Results not available yet"})
+                "body": json.dumps({
+                    "message": "Results not available yet"
+                })
             }
 
         # -----------------------------
-        # QUERY VOTES (CORRECT)
+        # QUERY VOTES
         # -----------------------------
         response = vote_table.query(
             KeyConditionExpression=Key("post_id").eq(post_id)
@@ -61,7 +91,7 @@ def lambda_handler(event, context):
         votes = response.get("Items", [])
 
         # -----------------------------
-        # COUNT VOTES
+        # COUNT RESULTS
         # -----------------------------
         result = {}
 
@@ -79,6 +109,7 @@ def lambda_handler(event, context):
 
     except Exception as e:
         print("ERROR:", str(e))
+
         return {
             "statusCode": 500,
             "body": json.dumps({
