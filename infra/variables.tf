@@ -10,6 +10,7 @@ variable "voter_emails" {
 
   default = [
     "prabh008968@gmail.com",
-    "kaurprabhsidhu852004@gmail.com"
+    "kaurprabhsidhu852004@gmail.com",
+    "prabhjot582004@gmail.com
   ]
 }
