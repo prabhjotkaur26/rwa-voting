@@ -74,7 +74,7 @@ resource "aws_dynamodb_table" "votes1" {
 # S3 Bucket (Frontend Hosting)
 # -------------------------------
 resource "aws_s3_bucket" "frontend" {
-  bucket = "rwa-frontend-bucket-123456"
+  bucket = "rwa-frontend-bucket-1234"
 
   tags = {
     Project = "RWA-Voting"
@@ -107,8 +107,6 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
 resource "aws_s3_bucket_policy" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
-  depends_on = [aws_s3_bucket_public_access_block.frontend]
-
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -121,7 +119,6 @@ resource "aws_s3_bucket_policy" "frontend" {
     ]
   })
 }
-
 # -------------------------------
 # SNS Topic (Email OTP)
 # -------------------------------
