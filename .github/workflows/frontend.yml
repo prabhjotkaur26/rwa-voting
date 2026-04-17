@@ -27,4 +27,4 @@ jobs:
           aws-region: ap-south-1
 
       - name: Deploy to S3
-        run: aws s3 sync dist/ s3://rwa-frontend-bucket --delete
+        run: aws s3 sync dist/ s3://rwa-frontend-bucket-12345 --delete
