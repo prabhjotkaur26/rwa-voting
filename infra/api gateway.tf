@@ -55,6 +55,14 @@ resource "aws_apigatewayv2_integration" "download" {
   integration_type = "AWS_PROXY"
   integration_uri  = aws_lambda_function.download.invoke_arn
 }
+resource "aws_apigatewayv2_integration" "lambda" {
+  api_id = aws_apigatewayv2_api.api.id
+
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.results.invoke_arn
+
+  payload_format_version = "2.0"
+}
 
 # -----------------------------
 # ROUTES
