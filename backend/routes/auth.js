@@ -6,31 +6,49 @@ const { generateOTP, saveOTP, verifyOTP } = require("../services/otpService");
 
 // SEND OTP
 router.post("/send-otp", async (req, res) => {
-  const { mobileNumber } = req.body;
+  try {
+    let { mobileNumber } = req.body;
 
-  const otp = generateOTP();
+    if (!mobileNumber) {
+      return res.status(400).json({ message: "Mobile required" });
+    }
 
-  await saveOTP(mobileNumber, otp);
+    if (!mobileNumber.startsWith("+")) {
+      mobileNumber = "+" + mobileNumber;
+    }
 
-  await sendSMS(mobileNumber, `Your OTP is ${otp}`);
+    const otp = generateOTP();
 
-  res.json({ message: "OTP sent" });
+    await saveOTP(mobileNumber, otp);
+    await sendSMS(mobileNumber, otp);
+
+    res.json({ message: "OTP sent" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error sending OTP" });
+  }
 });
 
 // VERIFY OTP
 router.post("/verify-otp", async (req, res) => {
-  const { mobileNumber, otp } = req.body;
+  try {
+    const { mobileNumber, otp } = req.body;
 
-  const valid = await verifyOTP(mobileNumber, otp);
+    const valid = await verifyOTP(mobileNumber, otp);
 
-  if (!valid) {
-    return res.status(401).json({ message: "Invalid OTP" });
+    if (!valid) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    res.json({
+      message: "OTP verified",
+      token: mobileNumber
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: "Error verifying OTP" });
   }
-
-  res.json({
-    message: "OTP verified",
-    token: mobileNumber // simple token (can upgrade to JWT later)
-  });
 });
 
 module.exports = router;

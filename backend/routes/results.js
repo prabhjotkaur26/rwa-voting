@@ -1,9 +1,9 @@
 const express = require("express");
-const AWS = require("aws-sdk");
 const router = express.Router();
 
-const dynamo = new AWS.DynamoDB.DocumentClient();
-const TABLE = "rwa-voting-votes3";
+const dynamo = require("../services/dynamo");
+
+const TABLE = process.env.VOTES_TABLE;
 
 router.get("/:electionId/:postId", async (req, res) => {
   try {
@@ -17,17 +17,17 @@ router.get("/:electionId/:postId", async (req, res) => {
       }
     }).promise();
 
-    // aggregate
     const result = {};
 
     data.Items.forEach(item => {
-      result[item.candidateId] = (result[item.candidateId] || 0) + 1;
+      result[item.candidateId] =
+        (result[item.candidateId] || 0) + 1;
     });
 
     res.json(result);
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Result error" });
   }
 });
 

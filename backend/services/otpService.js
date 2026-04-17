@@ -1,45 +1,46 @@
-const AWS = require("aws-sdk");
-const dynamo = new AWS.DynamoDB.DocumentClient();
+const dynamo = require("./dynamo");
 
-const TABLE = "rwa-voting-otp";
+const TABLE = process.env.OTP_TABLE;
 
+// 🔥 Generate OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function saveOTP(mobile, otp) {
-  return dynamo.put({
+// 🔥 Save OTP with TTL
+async function saveOTP(mobileNumber, otp) {
+  const expiresAt = Math.floor(Date.now() / 1000) + 300; // 5 min
+
+  await dynamo.put({
     TableName: TABLE,
     Item: {
-      mobileNumber: mobile,
+      mobileNumber,
       otp,
-      expiresAt: Math.floor(Date.now() / 1000) + 300, // 5 min
+      expiresAt,
       used: false
     }
   }).promise();
 }
 
-async function verifyOTP(mobile, otp) {
+// 🔥 Verify OTP
+async function verifyOTP(mobileNumber, otp) {
   const data = await dynamo.get({
     TableName: TABLE,
-    Key: { mobileNumber: mobile }
+    Key: { mobileNumber }
   }).promise();
 
-  const item = data.Item;
+  if (!data.Item) return false;
 
-  if (!item) return false;
-  if (item.used) return false;
-  if (item.otp !== otp) return false;
-  if (item.expiresAt < Math.floor(Date.now() / 1000)) return false;
+  if (data.Item.used) return false;
 
-  // mark as used
+  if (data.Item.otp !== otp) return false;
+
+  // mark used
   await dynamo.update({
     TableName: TABLE,
-    Key: { mobileNumber: mobile },
-    UpdateExpression: "set used = :u",
-    ExpressionAttributeValues: {
-      ":u": true
-    }
+    Key: { mobileNumber },
+    UpdateExpression: "SET used = :u",
+    ExpressionAttributeValues: { ":u": true }
   }).promise();
 
   return true;
