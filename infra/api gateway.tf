@@ -137,11 +137,13 @@ resource "aws_lambda_permission" "vote" {
   principal     = "apigateway.amazonaws.com"
 }
 
-resource "aws_lambda_permission" "results" {
-  statement_id  = "AllowAPIGatewayResults"
+resource "aws_lambda_permission" "apigw" {
+  statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.results.function_name
   principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }
 
 resource "aws_lambda_permission" "admin" {
