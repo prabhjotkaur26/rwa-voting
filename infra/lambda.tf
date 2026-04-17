@@ -145,3 +145,20 @@ resource "aws_lambda_function" "results" {
     }
   }
 }
+resource "aws_lambda_function" "download" {
+  function_name = "download"
+  role          = aws_iam_role.lambda_role.arn
+
+  handler       = "download.lambda_handler"
+  runtime       = "python3.11"
+
+  filename      = "download.zip"
+
+  source_code_hash = filebase64sha256("download.zip")
+
+  environment {
+    variables = {
+      BUCKET = aws_s3_bucket.your_bucket.id
+    }
+  }
+}
