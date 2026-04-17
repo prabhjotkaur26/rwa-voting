@@ -76,11 +76,11 @@ def lambda_handler(event, context):
         ContentType="text/csv"
     )
 
-    # ✅ RETURN FILE KEY (NOT URL)
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "Export successful",
-            "file_key": csv_key
-        })
-    }
+   url = s3.generate_presigned_url(
+    'get_object',
+    Params={
+        'Bucket': BUCKET,
+        'Key': file_key
+    },
+    ExpiresIn=3600
+)
