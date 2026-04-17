@@ -147,7 +147,7 @@ resource "aws_lambda_function" "results" {
 }
 data "archive_file" "download_zip" {
   type        = "zip"
-  source_file = "${path.module}/lambdas/download/download.py"
+  source_file = abspath("${path.module}/lambdas/download/download.py")
   output_path = "${path.module}/download.zip"
 }
 
