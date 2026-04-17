@@ -145,18 +145,12 @@ resource "aws_lambda_function" "results" {
     }
   }
 }
-# =========================
-# DOWNLOAD ZIP
-# =========================
 data "archive_file" "download_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/lambdas/download"
+  source_file = "${path.module}/lambdas/download/download.py"
   output_path = "${path.module}/download.zip"
 }
 
-# =========================
-# DOWNLOAD LAMBDA
-# =========================
 resource "aws_lambda_function" "download" {
   function_name = "download"
   role          = aws_iam_role.lambda_role.arn
