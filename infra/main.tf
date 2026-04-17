@@ -104,9 +104,10 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
   restrict_public_buckets = false
 }
 
-# Bucket policy (public read)
 resource "aws_s3_bucket_policy" "frontend" {
   bucket = aws_s3_bucket.frontend.id
+
+  depends_on = [aws_s3_bucket_public_access_block.frontend]
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -114,7 +115,7 @@ resource "aws_s3_bucket_policy" "frontend" {
       {
         Effect = "Allow"
         Principal = "*"
-        Action = ["s3:GetObject"]
+        Action = "s3:GetObject"
         Resource = "${aws_s3_bucket.frontend.arn}/*"
       }
     ]
