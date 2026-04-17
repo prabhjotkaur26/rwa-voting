@@ -99,6 +99,12 @@ resource "aws_apigatewayv2_route" "download" {
   route_key = "GET /download"
   target    = "integrations/${aws_apigatewayv2_integration.download.id}"
 }
+resource "aws_apigatewayv2_route" "get_results" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "GET /results"
+
+  target = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
 # -----------------------------
 # PERMISSIONS (VERY IMPORTANT)
 # -----------------------------
