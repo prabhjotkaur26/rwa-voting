@@ -11,20 +11,20 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
-
+      
       {/* Sidebar */}
       <aside className="w-64 bg-gradient-to-b from-indigo-600 to-purple-700 text-white p-6 hidden md:block">
         <h1 className="text-2xl font-bold mb-8">VoteChain</h1>
 
         <nav className="space-y-4 text-sm">
-          <p className="opacity-80 hover:opacity-100 cursor-pointer">🏠 Dashboard</p>
-          <p className="opacity-80 hover:opacity-100 cursor-pointer">🗳 Elections</p>
-          <p className="opacity-80 hover:opacity-100 cursor-pointer">📊 Results</p>
-          <p className="opacity-80 hover:opacity-100 cursor-pointer">⚙ Settings</p>
+          <p className="cursor-pointer">Dashboard</p>
+          <p className="cursor-pointer">Elections</p>
+          <p className="cursor-pointer">Results</p>
+          <p className="cursor-pointer">Settings</p>
         </nav>
 
         <div className="mt-10 text-xs opacity-70">
-          Secure Blockchain Voting System
+          Secure Voting System
         </div>
       </aside>
 
@@ -43,55 +43,48 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-
+          
           <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-4 rounded-xl shadow">
-            <p className="text-sm">Total Votes</p>
+            <p>Total Votes</p>
             <h3 className="text-2xl font-bold">{votes}</h3>
           </div>
 
           <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-sm text-gray-500">Active Elections</p>
+            <p>Active Elections</p>
             <h3 className="text-xl font-bold">3</h3>
           </div>
 
           <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-sm text-gray-500">Your Status</p>
-            <h3 className="text-green-600 font-semibold">Verified Voter</h3>
+            <p>Your Status</p>
+            <h3 className="text-green-600 font-semibold">Verified</h3>
           </div>
 
           <div className="bg-white p-4 rounded-xl shadow">
-            <p className="text-sm text-gray-500">Next Election</p>
-            <h3 className="text-orange-500 font-semibold">In 02h 15m</h3>
+            <p>Next Election</p>
+            <h3 className="text-orange-500 font-semibold">2h 15m</h3>
           </div>
         </div>
 
-        {/* Content Grid */}
+        {/* Candidates */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Candidates */}
           <div className="lg:col-span-2 bg-white p-5 rounded-xl shadow">
-            <h3 className="font-semibold mb-4">Current Elections</h3>
+            <h3 className="mb-4 font-semibold">Current Elections</h3>
 
             <div className="grid md:grid-cols-3 gap-4">
               {candidates.map((c, i) => (
-                <div
-                  key={i}
-                  className="border rounded-xl p-4 hover:shadow-lg transition"
-                >
-                  <div className="w-14 h-14 rounded-full bg-indigo-200 mb-3"></div>
-
+                <div key={i} className="border rounded-xl p-4">
+                  
                   <h4 className="font-semibold">{c.name}</h4>
                   <p className="text-sm text-gray-500">{c.party}</p>
 
-                  <div className="mt-3 text-sm">
-                    <p className="font-semibold text-indigo-600">
-                      {c.votes} Votes
-                    </p>
-                  </div>
+                  <p className="mt-2 text-indigo-600 font-semibold">
+                    {c.votes} Votes
+                  </p>
 
-                  <button className="mt-3 w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+                  <button className="mt-3 w-full bg-indigo-600 text-white py-2 rounded-lg">
                     Vote
                   </button>
                 </div>
@@ -99,39 +92,28 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Right panel */}
+          {/* Right Panel */}
           <div className="space-y-6">
 
-            {/* Pie / Stats */}
             <div className="bg-white p-5 rounded-xl shadow">
-              <h3 className="font-semibold mb-3">Election Stats</h3>
+              <h3 className="mb-3 font-semibold">Stats</h3>
 
-              <div className="space-y-2 text-sm">
-                <p>Total Votes: <b>{votes}</b></p>
-                <p>Alice: 43%</p>
-                <p>Michael: 34%</p>
-                <p>Sarah: 23%</p>
-              </div>
-
-              <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500 w-[43%]"></div>
-              </div>
+              <p>Total Votes: {votes}</p>
+              <p>Alice: 43%</p>
+              <p>Michael: 34%</p>
+              <p>Sarah: 23%</p>
             </div>
 
-            {/* Notices */}
             <div className="bg-white p-5 rounded-xl shadow">
-              <h3 className="font-semibold mb-3">Important Notices</h3>
+              <h3 className="mb-3 font-semibold">Notices</h3>
 
-              <p className="text-sm text-gray-600 mb-2">
-                🔐 Enable 2FA for better security
-              </p>
-              <p className="text-sm text-gray-600">
-                ⏰ Voting ends at 10:00 AM tomorrow
-              </p>
+              <p className="text-sm">Enable 2FA</p>
+              <p className="text-sm">Voting ends tomorrow</p>
             </div>
 
           </div>
         </div>
+
       </main>
     </div>
   );
