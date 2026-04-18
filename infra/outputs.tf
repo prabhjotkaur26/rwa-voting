@@ -27,5 +27,5 @@ output "frontend_bucket_name" {
 ########################################
 output "csv_bucket_name" {
   description = "CSV upload bucket name"
-  value       = aws_s3_bucket.csv_bucket.id
+  value       = aws_s3_bucket.csv_bucket1.id
 }
