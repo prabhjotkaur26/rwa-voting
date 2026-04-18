@@ -14,10 +14,6 @@ resource "aws_dynamodb_table" "voters1" {
     name = "email"
     type = "S"
   }
-
-  tags = {
-    Project = "RWA-Voting"
-  }
 }
 
 # -------------------------------
@@ -36,10 +32,6 @@ resource "aws_dynamodb_table" "otp1" {
   ttl {
     attribute_name = "expiry"
     enabled        = true
-  }
-
-  tags = {
-    Project = "RWA-Voting"
   }
 }
 
@@ -61,59 +53,6 @@ resource "aws_dynamodb_table" "votes1" {
     name = "voter"
     type = "S"
   }
-
-  tags = {
-    Project = "RWA-Voting"
-  }
-}
-
-# -------------------------------
-# S3 Bucket: Frontend Hosting
-# -------------------------------
-resource "aws_s3_bucket" "frontend" {
-  bucket = "rwa-frontend-bucket-1234"
-}
-
-resource "aws_s3_bucket_website_configuration" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "index.html"
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-resource "aws_s3_bucket_policy" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = "*"
-      Action = "s3:GetObject"
-      Resource = "${aws_s3_bucket.frontend.arn}/*"
-    }]
-  })
-}
-
-# -------------------------------
-# SNS Topic (OTP Email)
-# -------------------------------
-resource "aws_sns_topic" "otp_topic" {
-  name = "rwa-otp-topic"
 }
 
 # -------------------------------
@@ -122,16 +61,76 @@ resource "aws_sns_topic" "otp_topic" {
 resource "aws_s3_bucket" "csv_bucket" {
   bucket = "voter-csv-upload-bucket-12345"
 }
-     
+
 # -------------------------------
-# Lambda Function
+# IAM Role for Lambda
+# -------------------------------
+resource "aws_iam_role" "lambda_role" {
+  name = "csv_lambda_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+# -------------------------------
+# IAM Policy for Lambda
+# -------------------------------
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "lambda_policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:BatchWriteItem"
+        ]
+        Resource = aws_dynamodb_table.voters1.arn
+      },
+
+      {
+        Effect = "Allow"
+        Action = ["s3:GetObject"]
+        Resource = "${aws_s3_bucket.csv_bucket.arn}/*"
+      },
+
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# -------------------------------
+# Lambda ZIP (AUTO BUILD)
 # -------------------------------
 data "archive_file" "csv_zip" {
   type        = "zip"
-  source_dir = "${path.module}/../lambdas/csv_import"
+  source_dir  = "${path.module}/lambdas/csv_import"
   output_path = "${path.module}/build/csv_lambda.zip"
 }
 
+# -------------------------------
+# Lambda Function
+# -------------------------------
 resource "aws_lambda_function" "csv_lambda" {
   function_name = "csv_to_dynamodb"
   role          = aws_iam_role.lambda_role.arn
@@ -145,6 +144,17 @@ resource "aws_lambda_function" "csv_lambda" {
 }
 
 # -------------------------------
+# Lambda Permission (IMPORTANT)
+# -------------------------------
+resource "aws_lambda_permission" "allow_s3" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.csv_lambda.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.csv_bucket.arn
+}
+
+# -------------------------------
 # S3 Trigger → Lambda
 # -------------------------------
 resource "aws_s3_bucket_notification" "bucket_notify" {
@@ -154,18 +164,19 @@ resource "aws_s3_bucket_notification" "bucket_notify" {
     lambda_function_arn = aws_lambda_function.csv_lambda.arn
     events              = ["s3:ObjectCreated:*"]
   }
+
+  depends_on = [aws_lambda_permission.allow_s3]
 }
-resource "aws_lambda_permission" "allow_s3" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.csv_lambda.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.csv_bucket.arn
-}
+
+# -------------------------------
+# Upload CSV via Terraform
+# -------------------------------
 resource "aws_s3_object" "voter_csv" {
   bucket = aws_s3_bucket.csv_bucket.id
   key    = "voter.csv"
   source = "${path.module}/voter.csv"
 
   etag = filemd5("${path.module}/voter.csv")
+
+  depends_on = [aws_s3_bucket_notification.bucket_notify]
 }
