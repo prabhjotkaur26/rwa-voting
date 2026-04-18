@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { sendOtp, verifyOtp } from "../api/api";
+import { sendOtp, verifyOtp } from "../api/api.js";
 
 export default function Login() {
   const [email, setEmail] = useState("");
