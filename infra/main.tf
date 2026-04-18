@@ -129,3 +129,87 @@ resource "aws_sns_topic" "otp_topic" {
     Project = "RWA-Voting"
   }
 }
+
+# -----------------------
+# S3 Bucket (CSV Upload)
+# -----------------------
+resource "aws_s3_bucket" "csv_bucket" {
+  bucket = "voter-csv-upload-bucket-12345"
+}
+
+# -----------------------
+# IAM Role for Lambda
+# -----------------------
+resource "aws_iam_role" "lambda_role" {
+  name = "csv_lambda_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+# DynamoDB + S3 permissions
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "lambda_policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = ["dynamodb:PutItem"]
+        Resource = aws_dynamodb_table.voters.arn
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:GetObject"]
+        Resource = "${aws_s3_bucket.csv_bucket.arn}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["logs:*"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# -----------------------
+# Lambda Function
+# -----------------------
+resource "aws_lambda_function" "csv_lambda" {
+  filename         = "lambda.zip"
+  function_name    = "csv_to_dynamodb"
+  role            = aws_iam_role.lambda_role.arn
+  handler         = "index.lambda_handler"
+  runtime         = "python3.9"
+  timeout         = 30
+}
+
+# -----------------------
+# S3 Trigger → Lambda
+# -----------------------
+resource "aws_s3_bucket_notification" "bucket_notify" {
+  bucket = aws_s3_bucket.csv_bucket.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.csv_lambda.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+}
+
+resource "aws_lambda_permission" "allow_s3" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.csv_lambda.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.csv_bucket.arn
+}
