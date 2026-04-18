@@ -3,8 +3,8 @@
 ########################################
 data "archive_file" "auth_zip" {
   type        = "zip"
-  source_dir  = "../lambdas/auth"
-  output_path = "auth.zip"
+  source_dir  = "${path.module}/../lambdas/auth"
+  output_path = "${path.module}/build/auth.zip"
 }
 
 resource "aws_lambda_function" "auth" {
@@ -18,8 +18,8 @@ resource "aws_lambda_function" "auth" {
 
   environment {
     variables = {
-      OTP_TABLE    = aws_dynamodb_table.otp.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      OTP_TABLE    = aws_dynamodb_table.otp1.name
+      VOTER_TABLE  = aws_dynamodb_table.voters1.name
       SENDER_EMAIL = "prabh008968@gmail.com"
       JWT_SECRET   = "mysecret123"
     }
@@ -31,8 +31,8 @@ resource "aws_lambda_function" "auth" {
 ########################################
 data "archive_file" "verify_zip" {
   type        = "zip"
-  source_dir  = "../lambdas/verify"
-  output_path = "verify.zip"
+  source_dir  = "${path.module}/../lambdas/verify"
+  output_path = "${path.module}/build/verify.zip"
 }
 
 resource "aws_lambda_function" "verify" {
@@ -46,7 +46,7 @@ resource "aws_lambda_function" "verify" {
 
   environment {
     variables = {
-      OTP_TABLE  = aws_dynamodb_table.otp.name
+      OTP_TABLE  = aws_dynamodb_table.otp1.name
       JWT_SECRET = "mysecret123"
     }
   }
@@ -57,8 +57,8 @@ resource "aws_lambda_function" "verify" {
 ########################################
 data "archive_file" "vote_zip" {
   type        = "zip"
-  source_dir  = "../lambdas/vote"
-  output_path = "vote.zip"
+  source_dir  = "${path.module}/../lambdas/vote"
+  output_path = "${path.module}/build/vote.zip"
 }
 
 resource "aws_lambda_function" "vote" {
@@ -72,8 +72,8 @@ resource "aws_lambda_function" "vote" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      VOTE_TABLE   = aws_dynamodb_table.votes1.name
+      VOTER_TABLE  = aws_dynamodb_table.voters1.name
       JWT_SECRET   = "mysecret123"
     }
   }
@@ -84,8 +84,8 @@ resource "aws_lambda_function" "vote" {
 ########################################
 data "archive_file" "admin_zip" {
   type        = "zip"
-  source_dir  = "../lambdas/admin"
-  output_path = "admin.zip"
+  source_dir  = "${path.module}/../lambdas/admin"
+  output_path = "${path.module}/build/admin.zip"
 }
 
 resource "aws_lambda_function" "admin" {
@@ -99,10 +99,10 @@ resource "aws_lambda_function" "admin" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
-      CONFIG_TABLE = aws_dynamodb_table.election.name
-      JWT_SECRET   = "mysecret123"
+      VOTE_TABLE    = aws_dynamodb_table.votes1.name
+      VOTER_TABLE   = aws_dynamodb_table.voters1.name
+      CONFIG_TABLE  = aws_dynamodb_table.election.name
+      JWT_SECRET    = "mysecret123"
     }
   }
 }
@@ -112,8 +112,8 @@ resource "aws_lambda_function" "admin" {
 ########################################
 data "archive_file" "export_zip" {
   type        = "zip"
-  source_dir  = "../lambdas/export"
-  output_path = "export.zip"
+  source_dir  = "${path.module}/../lambdas/export"
+  output_path = "${path.module}/build/export.zip"
 }
 
 resource "aws_lambda_function" "export" {
@@ -127,10 +127,10 @@ resource "aws_lambda_function" "export" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes.name
-      CONFIG_TABLE  = aws_dynamodb_table.election.name
-      BUCKET        = aws_s3_bucket.candidate_images.bucket
-      JWT_SECRET    = "mysecret123"
+      VOTE_TABLE   = aws_dynamodb_table.votes1.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
+      BUCKET       = aws_s3_bucket.frontend.bucket
+      JWT_SECRET   = "mysecret123"
     }
   }
 }
@@ -140,8 +140,8 @@ resource "aws_lambda_function" "export" {
 ########################################
 data "archive_file" "download_zip" {
   type        = "zip"
-  source_file = "../lambdas/download/download.py"
-  output_path = "download.zip"
+  source_file = "${path.module}/../lambdas/download/download.py"
+  output_path = "${path.module}/build/download.zip"
 }
 
 resource "aws_lambda_function" "download" {
@@ -155,18 +155,18 @@ resource "aws_lambda_function" "download" {
 
   environment {
     variables = {
-      BUCKET = aws_s3_bucket.candidate_images.bucket
+      BUCKET = aws_s3_bucket.frontend.bucket
     }
   }
 }
 
 ########################################
-# RESULTS LAMBDA (FINAL - CLEAN POSITION)
+# RESULTS LAMBDA
 ########################################
 data "archive_file" "results_zip" {
   type        = "zip"
-  source_dir  = "../lambdas/results"
-  output_path = "results.zip"
+  source_dir  = "${path.module}/../lambdas/results"
+  output_path = "${path.module}/build/results.zip"
 }
 
 resource "aws_lambda_function" "results" {
@@ -180,7 +180,7 @@ resource "aws_lambda_function" "results" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      VOTE_TABLE   = aws_dynamodb_table.votes1.name
       CONFIG_TABLE  = aws_dynamodb_table.election.name
       JWT_SECRET    = "mysecret123"
     }
