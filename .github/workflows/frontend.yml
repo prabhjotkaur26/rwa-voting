@@ -11,32 +11,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
+      # -----------------------------
+      # Checkout
+      # -----------------------------
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Setup Node
+      # -----------------------------
+      # Node Setup (LTS SAFE)
+      # -----------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 20
+          cache: npm
 
-      # 3. Install dependencies
+      # -----------------------------
+      # Install Dependencies
+      # -----------------------------
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
-      # 4. Build React App
+      # -----------------------------
+      # Build React App
+      # -----------------------------
       - name: Build Project
         run: npm run build
 
-      # 5. Deploy to S3
-      - name: Deploy to AWS S3
-        uses: jakejarvis/s3-sync-action@master
+      # -----------------------------
+      # Configure AWS Credentials
+      # -----------------------------
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          args: --delete
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          SOURCE_DIR: dist
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # -----------------------------
+      # Deploy to S3
+      # -----------------------------
+      - name: Deploy to S3
+        run: |
+          aws s3 sync build/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
