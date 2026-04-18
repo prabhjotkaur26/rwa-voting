@@ -1,7 +1,7 @@
 ########################################
 # CANDIDATE IMAGES BUCKET
 ########################################
-resource "aws_s3_bucket" "candidate_images" {
+resource "aws_s3_bucket" "candidate_images1" {
   bucket        = "${var.project_name}-images"
 
   # ⚠️ safer than force_destroy = true
