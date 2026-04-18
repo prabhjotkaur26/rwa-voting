@@ -1,6 +1,15 @@
 resource "aws_apigatewayv2_api" "api" {
   name          = "rwa-api"
   protocol_type = "HTTP"
+
+  # ✅ CORS FIX (MOST IMPORTANT)
+  cors_configuration {
+    allow_origins = ["*"]
+    allow_methods = ["GET", "POST", "OPTIONS"]
+    allow_headers = ["Content-Type", "Authorization"]
+    expose_headers = ["Authorization"]
+    max_age = 3600
+  }
 }
 
 # -----------------------------
@@ -50,23 +59,18 @@ resource "aws_apigatewayv2_integration" "export" {
   integration_type = "AWS_PROXY"
   integration_uri  = aws_lambda_function.export.invoke_arn
 }
+
 resource "aws_apigatewayv2_integration" "download" {
   api_id           = aws_apigatewayv2_api.api.id
   integration_type = "AWS_PROXY"
   integration_uri  = aws_lambda_function.download.invoke_arn
 }
-resource "aws_apigatewayv2_integration" "lambda" {
-  api_id = aws_apigatewayv2_api.api.id
-
-  integration_type = "AWS_PROXY"
-  integration_uri  = aws_lambda_function.results.invoke_arn
-
-  payload_format_version = "2.0"
-}
 
 # -----------------------------
-# ROUTES
+# ROUTES (OPTIMIZED)
 # -----------------------------
+
+# AUTH
 resource "aws_apigatewayv2_route" "auth" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "POST /auth"
@@ -79,89 +83,59 @@ resource "aws_apigatewayv2_route" "verify" {
   target    = "integrations/${aws_apigatewayv2_integration.verify.id}"
 }
 
+# VOTING
 resource "aws_apigatewayv2_route" "vote" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "POST /vote"
   target    = "integrations/${aws_apigatewayv2_integration.vote.id}"
 }
 
-resource "aws_apigatewayv2_route" "results" {
+# RESULTS
+resource "aws_apigatewayv2_route" "get_results" {
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = "POST /results"
+  route_key = "GET /results"
   target    = "integrations/${aws_apigatewayv2_integration.results.id}"
 }
 
+# ADMIN
 resource "aws_apigatewayv2_route" "admin" {
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = "POST /admin"
+  route_key = "GET /admin"
   target    = "integrations/${aws_apigatewayv2_integration.admin.id}"
 }
 
+# EXPORT
 resource "aws_apigatewayv2_route" "export" {
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = "POST /export"
+  route_key = "GET /export"
   target    = "integrations/${aws_apigatewayv2_integration.export.id}"
 }
+
+# DOWNLOAD
 resource "aws_apigatewayv2_route" "download" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "GET /download"
   target    = "integrations/${aws_apigatewayv2_integration.download.id}"
 }
-resource "aws_apigatewayv2_route" "get_results" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "GET /results"
 
-  target = "integrations/${aws_apigatewayv2_integration.lambda.id}"
-}
 # -----------------------------
-# PERMISSIONS (VERY IMPORTANT)
+# PERMISSIONS (FIXED)
 # -----------------------------
-resource "aws_lambda_permission" "auth" {
-  statement_id  = "AllowAPIGatewayAuth"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.auth.function_name
-  principal     = "apigateway.amazonaws.com"
-}
+resource "aws_lambda_permission" "all" {
+  for_each = {
+    auth     = aws_lambda_function.auth.function_name
+    verify   = aws_lambda_function.verify.function_name
+    vote     = aws_lambda_function.vote.function_name
+    results  = aws_lambda_function.results.function_name
+    admin    = aws_lambda_function.admin.function_name
+    export   = aws_lambda_function.export.function_name
+    download = aws_lambda_function.download.function_name
+  }
 
-resource "aws_lambda_permission" "verify" {
-  statement_id  = "AllowAPIGatewayVerify"
+  statement_id  = "AllowAPIGateway-${each.key}"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.verify.function_name
-  principal     = "apigateway.amazonaws.com"
-}
-
-resource "aws_lambda_permission" "vote" {
-  statement_id  = "AllowAPIGatewayVote"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.vote.function_name
-  principal     = "apigateway.amazonaws.com"
-}
-
-resource "aws_lambda_permission" "apigw" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.results.function_name
+  function_name = each.value
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
-}
-
-resource "aws_lambda_permission" "admin" {
-  statement_id  = "AllowAPIGatewayAdmin"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.admin.function_name
-  principal     = "apigateway.amazonaws.com"
-}
-resource "aws_lambda_permission" "download" {
-  statement_id  = "AllowAPIGatewayDownload"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.download.function_name
-  principal     = "apigateway.amazonaws.com"
-}
-
-resource "aws_lambda_permission" "export" {
-  statement_id  = "AllowAPIGatewayExport"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.export.function_name
-  principal     = "apigateway.amazonaws.com"
 }
