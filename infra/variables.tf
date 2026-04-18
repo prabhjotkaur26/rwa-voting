@@ -1,16 +1,17 @@
+########################################
+# AWS REGION
+########################################
 variable "region" {
-  default = "ap-south-1"
+  description = "AWS region where all resources will be deployed"
+  type        = string
+  default     = "ap-south-1"
 }
 
+########################################
+# PROJECT NAME
+########################################
 variable "project_name" {
-  default = "rwa-voting"
-}
-variable "voter_emails" {
-  type = list(string)
-
-  default = [
-    "prabh008968@gmail.com",
-    "kaurprabhsidhu852004@gmail.com",
-    "prabhjot582004@gmail.com"
-  ]
+  description = "Base name used for naming AWS resources"
+  type        = string
+  default     = "rwa-voting"
 }
