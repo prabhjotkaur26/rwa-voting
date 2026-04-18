@@ -117,7 +117,7 @@ resource "aws_s3_bucket_notification" "bucket_notify" {
 resource "aws_s3_object" "voters_csv" {
   bucket = aws_s3_bucket.csv_bucket.id
   key    = "voters.csv"
-  source = "${path.module}/voters.csv"
+  source = "${path.module}/./voters.csv"
 
   depends_on = [aws_s3_bucket_notification.bucket_notify]
 }
