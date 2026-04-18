@@ -1,5 +1,12 @@
 ########################################
-# AUTH LAMBDA
+# COMMON LOCALS
+########################################
+locals {
+  jwt_secret = "CHANGE_THIS_IN_PRODUCTION"
+}
+
+########################################
+# AUTH LAMBDA (EMAIL OTP)
 ########################################
 data "archive_file" "auth_zip" {
   type        = "zip"
@@ -16,12 +23,15 @@ resource "aws_lambda_function" "auth" {
   filename         = data.archive_file.auth_zip.output_path
   source_code_hash = data.archive_file.auth_zip.output_base64sha256
 
+  timeout      = 10
+  memory_size  = 256
+
   environment {
     variables = {
-      OTP_TABLE    = aws_dynamodb_table.otp1.name
-      VOTER_TABLE  = aws_dynamodb_table.voters1.name
-      SENDER_EMAIL = "prabh008968@gmail.com"
-      JWT_SECRET   = "mysecret123"
+      OTP_TABLE    = aws_dynamodb_table.otp.name
+      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      SENDER_EMAIL = "your-verified-email@example.com"
+      JWT_SECRET   = local.jwt_secret
     }
   }
 }
@@ -44,16 +54,19 @@ resource "aws_lambda_function" "verify" {
   filename         = data.archive_file.verify_zip.output_path
   source_code_hash = data.archive_file.verify_zip.output_base64sha256
 
+  timeout      = 10
+  memory_size  = 256
+
   environment {
     variables = {
-      OTP_TABLE  = aws_dynamodb_table.otp1.name
-      JWT_SECRET = "mysecret123"
+      OTP_TABLE  = aws_dynamodb_table.otp.name
+      JWT_SECRET  = local.jwt_secret
     }
   }
 }
 
 ########################################
-# VOTE LAMBDA
+# VOTE LAMBDA (ONE VOTE PER USER PER POST)
 ########################################
 data "archive_file" "vote_zip" {
   type        = "zip"
@@ -70,11 +83,14 @@ resource "aws_lambda_function" "vote" {
   filename         = data.archive_file.vote_zip.output_path
   source_code_hash = data.archive_file.vote_zip.output_base64sha256
 
+  timeout      = 10
+  memory_size  = 256
+
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes1.name
-      VOTER_TABLE  = aws_dynamodb_table.voters1.name
-      JWT_SECRET   = "mysecret123"
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      JWT_SECRET   = local.jwt_secret
     }
   }
 }
@@ -97,18 +113,21 @@ resource "aws_lambda_function" "admin" {
   filename         = data.archive_file.admin_zip.output_path
   source_code_hash = data.archive_file.admin_zip.output_base64sha256
 
+  timeout      = 10
+  memory_size  = 256
+
   environment {
     variables = {
-      VOTE_TABLE    = aws_dynamodb_table.votes1.name
-      VOTER_TABLE   = aws_dynamodb_table.voters1.name
-      CONFIG_TABLE  = aws_dynamodb_table.election.name
-      JWT_SECRET    = "mysecret123"
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
+      JWT_SECRET   = local.jwt_secret
     }
   }
 }
 
 ########################################
-# EXPORT LAMBDA
+# EXPORT LAMBDA (CSV/PDF)
 ########################################
 data "archive_file" "export_zip" {
   type        = "zip"
@@ -125,12 +144,15 @@ resource "aws_lambda_function" "export" {
   filename         = data.archive_file.export_zip.output_path
   source_code_hash = data.archive_file.export_zip.output_base64sha256
 
+  timeout      = 15
+  memory_size  = 512
+
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes1.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
       CONFIG_TABLE = aws_dynamodb_table.election.name
       BUCKET       = aws_s3_bucket.frontend.bucket
-      JWT_SECRET   = "mysecret123"
+      JWT_SECRET   = local.jwt_secret
     }
   }
 }
@@ -153,6 +175,9 @@ resource "aws_lambda_function" "download" {
   filename         = data.archive_file.download_zip.output_path
   source_code_hash = data.archive_file.download_zip.output_base64sha256
 
+  timeout      = 10
+  memory_size  = 256
+
   environment {
     variables = {
       BUCKET = aws_s3_bucket.frontend.bucket
@@ -161,7 +186,7 @@ resource "aws_lambda_function" "download" {
 }
 
 ########################################
-# RESULTS LAMBDA
+# RESULTS LAMBDA (PUBLIC VIEW CONTROLLED)
 ########################################
 data "archive_file" "results_zip" {
   type        = "zip"
@@ -178,11 +203,14 @@ resource "aws_lambda_function" "results" {
   filename         = data.archive_file.results_zip.output_path
   source_code_hash = data.archive_file.results_zip.output_base64sha256
 
+  timeout      = 10
+  memory_size  = 256
+
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes1.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
       CONFIG_TABLE  = aws_dynamodb_table.election.name
-      JWT_SECRET    = "mysecret123"
+      JWT_SECRET    = local.jwt_secret
     }
   }
 }
