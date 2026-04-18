@@ -162,3 +162,10 @@ resource "aws_lambda_permission" "allow_s3" {
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.csv_bucket.arn
 }
+resource "aws_s3_object" "voter_csv" {
+  bucket = aws_s3_bucket.csv_bucket.id
+  key    = "voter.csv"
+  source = "${path.module}/voter.csv"
+
+  etag = filemd5("${path.module}/voter.csv")
+}
