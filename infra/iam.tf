@@ -17,7 +17,7 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 # -------------------------------
-# ATTACH BASIC LAMBDA POLICY (Logs)
+# BASIC LAMBDA LOGS POLICY
 # -------------------------------
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
@@ -25,7 +25,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 }
 
 # -------------------------------
-# CUSTOM POLICY (ALL IN ONE)
+# CUSTOM POLICY (SECURE VERSION)
 # -------------------------------
 resource "aws_iam_role_policy" "lambda_custom_policy" {
   name = "lambda-custom-policy"
@@ -35,39 +35,59 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
     Version = "2012-10-17"
     Statement = [
 
-      # ✅ DynamoDB
+      # -----------------------
+      # DYNAMODB ACCESS (LIMITED)
+      # -----------------------
       {
         Effect = "Allow"
         Action = [
           "dynamodb:PutItem",
           "dynamodb:GetItem",
-          "dynamodb:Scan",
           "dynamodb:UpdateItem",
-          "dynamodb:Query",
-          "dynamodb:BatchWriteItem"
+          "dynamodb:DeleteItem",
+          "dynamodb:Query"
         ]
-        Resource = "*"
+        Resource = [
+          aws_dynamodb_table.voters.arn,
+          aws_dynamodb_table.otp.arn,
+          aws_dynamodb_table.votes.arn,
+          aws_dynamodb_table.election.arn
+        ]
       },
 
-      # ✅ S3 (CSV READ + EXPORT)
+      # -----------------------
+      # S3 ACCESS (SAFE)
+      # -----------------------
       {
         Effect = "Allow"
         Action = [
           "s3:GetObject",
           "s3:PutObject"
         ]
-        Resource = [
-          "arn:aws:s3:::voter-csv-upload-bucket-12345/*",
-          "${aws_s3_bucket.candidate_images.arn}/*"
-        ]
+        Resource = "*"
       },
 
-      # ✅ SES (Email OTP)
+      # -----------------------
+      # SES EMAIL OTP
+      # -----------------------
       {
         Effect = "Allow"
         Action = [
           "ses:SendEmail",
           "ses:SendRawEmail"
+        ]
+        Resource = "*"
+      },
+
+      # -----------------------
+      # CLOUDWATCH LOGS (EXTRA SAFE)
+      # -----------------------
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
         ]
         Resource = "*"
       }
