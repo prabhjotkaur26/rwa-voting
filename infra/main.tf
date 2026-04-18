@@ -123,3 +123,21 @@ resource "aws_s3_object" "voter_csv" {
 
   depends_on = [aws_s3_bucket_notification.bucket_notify]
 }
+# -------------------------------
+# S3 Bucket: Frontend (FIX ADDED)
+# -------------------------------
+resource "aws_s3_bucket" "frontend" {
+  bucket = "rwa-frontend-bucket-1234"
+}
+
+resource "aws_s3_bucket_website_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "index.html"
+  }
+}
