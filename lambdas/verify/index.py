@@ -1,33 +1,43 @@
-<<<<<<< HEAD
-import json, boto3, os, time, jwt
-=======
 import json
 import boto3
 import os
 import time
 import jwt
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
 
+# -----------------------------
+# AWS SETUP
+# -----------------------------
 dynamodb = boto3.resource('dynamodb')
 
 otp_table = dynamodb.Table(os.environ['OTP_TABLE'])
-<<<<<<< HEAD
-
-JWT_SECRET = os.environ['JWT_SECRET']
-
-def lambda_handler(event, context):
-    try:
-        body = event.get("body")
-=======
 JWT_SECRET = os.environ['JWT_SECRET']
 
 
+# -----------------------------
+# RESPONSE HELPER
+# -----------------------------
+def response(status, body, headers=None):
+    return {
+        "statusCode": status,
+        "headers": headers or {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+        },
+        "body": json.dumps(body)
+    }
+
+
+# -----------------------------
+# MAIN HANDLER
+# -----------------------------
 def lambda_handler(event, context):
     try:
         print("EVENT:", event)
 
+        # -----------------------------
+        # PARSE BODY
+        # -----------------------------
         body = event.get("body") or "{}"
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
 
         if isinstance(body, str):
             body = json.loads(body)
@@ -36,89 +46,47 @@ def lambda_handler(event, context):
         otp = body.get("otp")
 
         if not email or not otp:
-            return {
-                "statusCode": 400,
-<<<<<<< HEAD
-                "body": "Email and OTP required"
-            }
+            return response(400, {"message": "Email and OTP required"})
 
-        # ✅ Fetch OTP
-=======
-                "body": json.dumps({"message": "Email and OTP required"})
-            }
+        email = email.strip().lower()
 
         # -----------------------------
         # FETCH OTP
         # -----------------------------
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
         res = otp_table.get_item(Key={"email": email})
 
         if "Item" not in res:
-            return {
-                "statusCode": 400,
-<<<<<<< HEAD
-                "body": "Invalid OTP"
-=======
-                "body": json.dumps({"message": "Invalid OTP"})
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
-            }
+            return response(400, {"message": "Invalid OTP"})
 
         item = res["Item"]
 
-<<<<<<< HEAD
-        # ❌ Expired
-        if int(time.time()) > item["expiry"]:
-            return {
-                "statusCode": 400,
-                "body": "OTP expired"
-            }
-
-        # ❌ Wrong or used
-        if item["otp"] != otp or item.get("used"):
-            return {
-                "statusCode": 400,
-                "body": "Invalid OTP"
-            }
-
-        # ✅ Mark used
-=======
         # -----------------------------
         # CHECK EXPIRY
         # -----------------------------
-        if int(time.time()) > item["expiry"]:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"message": "OTP expired"})
-            }
+        if int(time.time()) > item.get("expiry", 0):
+            return response(400, {"message": "OTP expired"})
 
         # -----------------------------
-        # CHECK OTP MATCH + USED
+        # CHECK OTP VALIDITY
         # -----------------------------
-        if item["otp"] != otp or item.get("used"):
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"message": "Invalid OTP"})
-            }
+        if item.get("otp") != otp or item.get("used"):
+            return response(400, {"message": "Invalid OTP"})
 
         # -----------------------------
         # MARK OTP AS USED
         # -----------------------------
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
         otp_table.update_item(
             Key={"email": email},
             UpdateExpression="SET used = :u",
             ExpressionAttributeValues={":u": True}
         )
 
-<<<<<<< HEAD
-        # ✅ Generate JWT
-        token = jwt.encode(
-            {"email": email, "exp": int(time.time()) + 3600},
-=======
         # -----------------------------
-        # ADMIN LOGIC
+        # ROLE SYSTEM (IMPORTANT FIX)
         # -----------------------------
-        is_admin = True if email == "prabhjot582004@gmail.com" else False
+        is_admin = os.environ.get("ADMIN_EMAIL") == email
+
+        role = "admin" if is_admin else "voter"
 
         # -----------------------------
         # GENERATE JWT
@@ -126,42 +94,23 @@ def lambda_handler(event, context):
         token = jwt.encode(
             {
                 "email": email,
-                "isAdmin": is_admin,
+                "role": role,
                 "exp": int(time.time()) + 3600
             },
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
             JWT_SECRET,
             algorithm="HS256"
         )
 
-        return {
-            "statusCode": 200,
-<<<<<<< HEAD
-            "body": json.dumps({"token": token})
-=======
-            "headers": {
-                "Content-Type": "application/json"
-            },
-            "body": json.dumps({
-                "token": token,
-                "isAdmin": is_admin
-            })
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
-        }
+        # -----------------------------
+        # SUCCESS RESPONSE
+        # -----------------------------
+        return response(200, {
+            "token": token,
+            "role": role
+        })
 
     except Exception as e:
         print("ERROR:", str(e))
-<<<<<<< HEAD
-        return {
-            "statusCode": 500,
-            "body": str(e)
-=======
-
-        return {
-            "statusCode": 500,
-            "body": json.dumps({
-                "message": "Internal server error",
-                "error": str(e)
-            })
->>>>>>> 415f187d4d706d35862c6f526b70dd8bbf14710c
-        }
+        return response(500, {
+            "message": "Internal server error"
+        })
