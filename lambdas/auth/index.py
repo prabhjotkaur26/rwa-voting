@@ -24,21 +24,15 @@ def lambda_handler(event, context):
         print("EVENT:", event)
 
         # -----------------------------
-        # Parse API Gateway body
+        # Parse request body
         # -----------------------------
         body = event.get("body")
 
-        if body is None:
+        if not body:
             return response(400, "Request body is required")
 
         if isinstance(body, str):
-            try:
-                body = json.loads(body)
-            except json.JSONDecodeError:
-                return response(400, "Invalid JSON body")
-
-        if not isinstance(body, dict):
-            return response(400, "Invalid request format")
+            body = json.loads(body)
 
         email = body.get("email")
 
@@ -62,15 +56,15 @@ def lambda_handler(event, context):
         expiry = int(time.time()) + 300  # 5 minutes
 
         # -----------------------------
-        # Store OTP (overwrite old)
+        # Store OTP in DynamoDB
         # -----------------------------
         otp_table.put_item(
             Item={
                 "email": email,
                 "otp": otp,
                 "expiry": expiry,
-                "used": False,
-                "ttl": expiry  # DynamoDB auto expiry
+                "used": False
+                # NOTE: TTL attribute should be 'expiry' in DynamoDB table
             }
         )
 
@@ -79,22 +73,21 @@ def lambda_handler(event, context):
         # -----------------------------
         ses.send_email(
             Source=SENDER,
-            Destination={"ToAddresses": [email]},
+            Destination={
+                "ToAddresses": [email]
+            },
             Message={
                 "Subject": {
-                    "Data": "Your OTP for Voting System"
+                    "Data": "RWA Voting OTP Verification"
                 },
                 "Body": {
                     "Text": {
-                        "Data": f"Your OTP is {otp}. It is valid for 5 minutes. Do not share it with anyone."
+                        "Data": f"Your OTP is {otp}. Valid for 5 minutes. Do not share it."
                     }
                 }
             }
         )
 
-        # -----------------------------
-        # Success response
-        # -----------------------------
         return response(200, "OTP sent successfully")
 
     except Exception as e:
@@ -103,13 +96,14 @@ def lambda_handler(event, context):
 
 
 # -----------------------------
-# HELPER RESPONSE FUNCTION
+# RESPONSE HELPER
 # -----------------------------
 def response(status, message):
     return {
         "statusCode": status,
         "headers": {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
         },
         "body": json.dumps({
             "message": message
