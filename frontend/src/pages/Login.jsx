@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { sendOTP } from "../api/api";
+import { sendOTP } from "../api/api.js";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
