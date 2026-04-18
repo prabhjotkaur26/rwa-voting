@@ -126,13 +126,22 @@ resource "aws_s3_bucket" "csv_bucket" {
 # -------------------------------
 # Lambda Function
 # -------------------------------
+data "archive_file" "csv_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambdas/csv_import"
+  output_path = "${path.module}/build/csv_lambda.zip"
+}
+
 resource "aws_lambda_function" "csv_lambda" {
-  filename      = "lambda.zip"
   function_name = "csv_to_dynamodb"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
-  timeout       = 300
+
+  filename         = data.archive_file.csv_zip.output_path
+  source_code_hash = data.archive_file.csv_zip.output_base64sha256
+
+  timeout = 300
 }
 
 # -------------------------------
