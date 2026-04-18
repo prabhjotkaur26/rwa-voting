@@ -63,63 +63,6 @@ resource "aws_s3_bucket" "csv_bucket" {
 }
 
 # -------------------------------
-# IAM Role for Lambda
-# -------------------------------
-resource "aws_iam_role" "lambda_role" {
-  name = "csv_lambda_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      }
-    }]
-  })
-}
-
-# -------------------------------
-# IAM Policy for Lambda
-# -------------------------------
-resource "aws_iam_role_policy" "lambda_policy" {
-  name = "lambda_policy"
-  role = aws_iam_role.lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:PutItem",
-          "dynamodb:BatchWriteItem"
-        ]
-        Resource = aws_dynamodb_table.voters1.arn
-      },
-
-      {
-        Effect = "Allow"
-        Action = ["s3:GetObject"]
-        Resource = "${aws_s3_bucket.csv_bucket.arn}/*"
-      },
-
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# -------------------------------
 # Lambda ZIP (AUTO BUILD)
 # -------------------------------
 data "archive_file" "csv_zip" {
