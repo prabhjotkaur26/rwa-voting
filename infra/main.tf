@@ -119,8 +119,6 @@ resource "aws_s3_object" "voter_csv" {
   key    = "voter.csv"
   source = "${path.module}/voter.csv"
 
-  etag = filemd5("${path.module}/voter.csv")
-
   depends_on = [aws_s3_bucket_notification.bucket_notify]
 }
 # -------------------------------
