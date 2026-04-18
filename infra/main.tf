@@ -114,10 +114,10 @@ resource "aws_s3_bucket_notification" "bucket_notify" {
 # -------------------------------
 # Upload CSV via Terraform
 # -------------------------------
-resource "aws_s3_object" "voters.csv" {
+resource "aws_s3_object" "voters_csv" {
   bucket = aws_s3_bucket.csv_bucket.id
-  key    = "voter.csv"
-  source = "${path.module}/voter.csv"
+  key    = "voters.csv"
+  source = "${path.module}/voters.csv"
 
   depends_on = [aws_s3_bucket_notification.bucket_notify]
 }
