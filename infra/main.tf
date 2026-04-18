@@ -5,7 +5,7 @@ provider "aws" {
 ########################################
 # VOTER REGISTRY TABLE
 ########################################
-resource "aws_dynamodb_table" "voters22" {
+resource "aws_dynamodb_table" "voters" {
   name         = "rwa-voters"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -22,9 +22,9 @@ resource "aws_dynamodb_table" "voters22" {
 }
 
 ########################################
-# OTP TABLE (EMAIL OTP)
+# OTP TABLE
 ########################################
-resource "aws_dynamodb_table" "otp22" {
+resource "aws_dynamodb_table" "otp" {
   name         = "rwa-otp"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -46,9 +46,9 @@ resource "aws_dynamodb_table" "otp22" {
 }
 
 ########################################
-# VOTES TABLE (SECURE)
+# VOTES TABLE
 ########################################
-resource "aws_dynamodb_table" "votes22" {
+resource "aws_dynamodb_table" "votes" {
   name         = "rwa-votes"
   billing_mode = "PAY_PER_REQUEST"
 
@@ -72,6 +72,25 @@ resource "aws_dynamodb_table" "votes22" {
 }
 
 ########################################
+# ELECTION CONFIG TABLE
+########################################
+resource "aws_dynamodb_table" "election" {
+  name         = "rwa-election"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "post"
+
+  attribute {
+    name = "post"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "rwa-election"
+    Environment = "prod"
+  }
+}
+
+########################################
 # S3 BUCKET: CSV UPLOAD
 ########################################
 resource "aws_s3_bucket" "csv_bucket1" {
@@ -84,7 +103,7 @@ resource "aws_s3_bucket" "csv_bucket1" {
 }
 
 resource "aws_s3_bucket_versioning" "csv_versioning" {
-  bucket = aws_s3_bucket.csv_bucket.id
+  bucket = aws_s3_bucket.csv_bucket1.id
 
   versioning_configuration {
     status = "Enabled"
@@ -92,7 +111,7 @@ resource "aws_s3_bucket_versioning" "csv_versioning" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "csv_encrypt" {
-  bucket = aws_s3_bucket.csv_bucket.id
+  bucket = aws_s3_bucket.csv_bucket1.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -111,7 +130,7 @@ data "archive_file" "csv_zip" {
 }
 
 ########################################
-# CSV LAMBDA FUNCTION
+# LAMBDA FUNCTION
 ########################################
 resource "aws_lambda_function" "csv_lambda" {
   function_name = "csv_to_dynamodb"
@@ -138,14 +157,15 @@ resource "aws_lambda_permission" "allow_s3" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.csv_lambda.function_name
   principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.csv_bucket.arn
+
+  source_arn = aws_s3_bucket.csv_bucket1.arn
 }
 
 ########################################
 # S3 EVENT TRIGGER
 ########################################
 resource "aws_s3_bucket_notification" "bucket_notify" {
-  bucket = aws_s3_bucket.csv_bucket.id
+  bucket = aws_s3_bucket.csv_bucket1.id
 
   lambda_function {
     lambda_function_arn = aws_lambda_function.csv_lambda.arn
@@ -156,10 +176,10 @@ resource "aws_s3_bucket_notification" "bucket_notify" {
 }
 
 ########################################
-# CSV FILE UPLOAD (OPTIONAL)
+# CSV FILE UPLOAD
 ########################################
 resource "aws_s3_object" "voters_csv" {
-  bucket = aws_s3_bucket.csv_bucket.id
+  bucket = aws_s3_bucket.csv_bucket1.id
   key    = "voters.csv"
 
   source = "${path.module}/../voters.csv"
