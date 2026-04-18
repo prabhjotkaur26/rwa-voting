@@ -1,15 +1,39 @@
-resource "aws_iam_role" "lambda_role" {
-  name = "lambda-execution-role"
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "lambda_policy"
+  role = aws_iam_role.lambda_role.id   # 👈 ensure same role used
 
-  assume_role_policy = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
+    Statement = [
+
+      # ✅ S3 FIX
+      {
+        Effect = "Allow"
+        Action = ["s3:GetObject"]
+        Resource = "arn:aws:s3:::voter-csv-upload-bucket-12345/*"
+      },
+
+      # DynamoDB
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:BatchWriteItem"
+        ]
+        Resource = aws_dynamodb_table.voters1.arn
+      },
+
+      # Logs
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
       }
-    }]
+    ]
   })
 }
 
