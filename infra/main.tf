@@ -49,9 +49,8 @@ resource "aws_dynamodb_table" "otp1" {
 resource "aws_dynamodb_table" "votes1" {
   name         = "rwa-votes"
   billing_mode = "PAY_PER_REQUEST"
-
-  hash_key  = "post"
-  range_key = "voter"
+  hash_key     = "post"
+  range_key    = "voter"
 
   attribute {
     name = "post"
@@ -87,10 +86,6 @@ resource "aws_dynamodb_table" "election" {
 # -------------------------------
 resource "aws_s3_bucket" "frontend" {
   bucket = "rwa-frontend-bucket-1234"
-
-  tags = {
-    Project = "RWA-Voting"
-  }
 }
 
 resource "aws_s3_bucket_website_configuration" "frontend" {
@@ -133,10 +128,6 @@ resource "aws_s3_bucket_policy" "frontend" {
 # -------------------------------
 resource "aws_sns_topic" "otp_topic" {
   name = "rwa-otp-topic"
-
-  tags = {
-    Project = "RWA-Voting"
-  }
 }
 
 # -------------------------------
@@ -205,11 +196,11 @@ resource "aws_lambda_function" "csv_lambda" {
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.lambda_handler"
   runtime       = "python3.9"
-  timeout      = 30
+  timeout       = 30
 }
 
 # -------------------------------
-# Lambda Permission (S3 Invoke)
+# Lambda Permission
 # -------------------------------
 resource "aws_lambda_permission" "allow_s3" {
   statement_id  = "AllowS3Invoke"
