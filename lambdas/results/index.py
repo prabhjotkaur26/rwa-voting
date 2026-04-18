@@ -4,12 +4,29 @@ import os
 import jwt
 from boto3.dynamodb.conditions import Key
 
+# -----------------------------
+# AWS RESOURCES
+# -----------------------------
 dynamodb = boto3.resource('dynamodb')
 
 vote_table = dynamodb.Table(os.environ['VOTE_TABLE'])
 config_table = dynamodb.Table(os.environ['CONFIG_TABLE'])
 
 JWT_SECRET = os.environ.get("JWT_SECRET", "mysecret")
+
+
+# -----------------------------
+# RESPONSE HELPER
+# -----------------------------
+def response(status, body):
+    return {
+        "statusCode": status,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+        },
+        "body": json.dumps(body)
+    }
 
 
 # -----------------------------
@@ -23,7 +40,6 @@ def get_user_role(event):
     if not token:
         return None
 
-    # Remove "Bearer " if present
     if token.startswith("Bearer "):
         token = token.replace("Bearer ", "")
 
@@ -43,26 +59,23 @@ def lambda_handler(event, context):
         print("EVENT:", event)
 
         # -----------------------------
-        # ROLE CHECK (SECURE)
+        # ROLE CHECK
         # -----------------------------
         role = get_user_role(event)
         is_admin = role == "admin"
 
         # -----------------------------
-        # PARSE BODY
+        # BODY PARSE
         # -----------------------------
         body = event.get("body") or "{}"
 
         if isinstance(body, str):
             body = json.loads(body)
 
-        post_id = body.get("postId") or body.get("post_id")
+        post_id = body.get("post_id") or body.get("postId")
 
         if not post_id:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"message": "post_id required"})
-            }
+            return response(400, {"message": "post_id required"})
 
         # -----------------------------
         # CHECK ELECTION STATUS
@@ -72,48 +85,53 @@ def lambda_handler(event, context):
 
         status = item.get("status", "ACTIVE")
 
-        # Only admin can see before CLOSED
+        # restrict non-admin users
         if not is_admin and status != "CLOSED":
-            return {
-                "statusCode": 403,
-                "body": json.dumps({
-                    "message": "Results not available yet"
-                })
-            }
+            return response(403, {"message": "Results not available yet"})
 
         # -----------------------------
-        # QUERY VOTES
+        # FETCH VOTES
         # -----------------------------
-        response = vote_table.query(
+        result = vote_table.query(
             KeyConditionExpression=Key("post_id").eq(post_id)
         )
 
-        votes = response.get("Items", [])
+        votes = result.get("Items", [])
 
         # -----------------------------
-        # COUNT RESULTS
+        # COUNT RESULTS SAFELY
         # -----------------------------
-        result = {}
+        vote_count = {}
 
         for v in votes:
-            cid = v["candidate_id"]
-            result[cid] = result.get(cid, 0) + 1
+            cid = v.get("candidate_id")
 
-        return {
-            "statusCode": 200,
-            "body": json.dumps({
+            if not cid:
+                continue
+
+            vote_count[cid] = vote_count.get(cid, 0) + 1
+
+        # -----------------------------
+        # EMPTY RESULT HANDLING
+        # -----------------------------
+        if not vote_count:
+            return response(200, {
                 "post_id": post_id,
-                "results": result
+                "results": {},
+                "message": "No votes yet"
             })
-        }
+
+        # -----------------------------
+        # SUCCESS RESPONSE
+        # -----------------------------
+        return response(200, {
+            "post_id": post_id,
+            "results": vote_count
+        })
 
     except Exception as e:
         print("ERROR:", str(e))
-
-        return {
-            "statusCode": 500,
-            "body": json.dumps({
-                "message": "Internal server error",
-                "error": str(e)
-            })
-        }
+        return response(500, {
+            "message": "Internal server error",
+            "error": str(e)
+        })
