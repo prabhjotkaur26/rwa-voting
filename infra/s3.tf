@@ -1,10 +1,8 @@
 ########################################
 # CANDIDATE IMAGES BUCKET
 ########################################
-resource "aws_s3_bucket" "candidate_images1" {
+resource "aws_s3_bucket" "candidate_images" {
   bucket        = "${var.project_name}-images"
-
-  # ⚠️ safer than force_destroy = true
   force_destroy = false
 
   tags = {
@@ -14,10 +12,10 @@ resource "aws_s3_bucket" "candidate_images1" {
 }
 
 ########################################
-# OWNERSHIP CONTROL (IMPORTANT)
+# OWNERSHIP CONTROL
 ########################################
 resource "aws_s3_bucket_ownership_controls" "ownership" {
-  bucket = aws_s3_bucket.candidate_images1.id
+  bucket = aws_s3_bucket.candidate_images.id
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -25,22 +23,22 @@ resource "aws_s3_bucket_ownership_controls" "ownership" {
 }
 
 ########################################
-# BLOCK PUBLIC ACCESS (SECURE)
+# BLOCK PUBLIC ACCESS
 ########################################
 resource "aws_s3_bucket_public_access_block" "block" {
-  bucket = aws_s3_bucket.candidate_images1.id
+  bucket = aws_s3_bucket.candidate_images.id
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls       = true
-  restrict_public_buckets  = true
+  block_public_acls      = true
+  block_public_policy    = true
+  ignore_public_acls     = true
+  restrict_public_buckets = true
 }
 
 ########################################
-# VERSIONING (SAFE STORAGE)
+# VERSIONING
 ########################################
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = aws_s3_bucket.candidate_images1.id
+  bucket = aws_s3_bucket.candidate_images.id
 
   versioning_configuration {
     status = "Enabled"
@@ -48,10 +46,10 @@ resource "aws_s3_bucket_versioning" "versioning" {
 }
 
 ########################################
-# SERVER SIDE ENCRYPTION (SECURITY)
+# SERVER SIDE ENCRYPTION
 ########################################
 resource "aws_s3_bucket_server_side_encryption_configuration" "enc" {
-  bucket = aws_s3_bucket.candidate_images1.id
+  bucket = aws_s3_bucket.candidate_images.id
 
   rule {
     apply_server_side_encryption_by_default {
