@@ -1,6 +1,6 @@
 output "api_gateway_url" {
-  description = "Base URL of the API Gateway"
-  value       = aws_api_gateway_stage.prod.invoke_url
+  description = "Base URL of HTTP API Gateway"
+  value       = aws_apigatewayv2_api.api.api_endpoint
 }
 
 output "frontend_url" {
