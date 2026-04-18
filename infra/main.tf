@@ -114,7 +114,7 @@ resource "aws_s3_bucket_notification" "bucket_notify" {
 # -------------------------------
 # Upload CSV via Terraform
 # -------------------------------
-resource "aws_s3_object" "voter_csv" {
+resource "aws_s3_object" "voters.csv" {
   bucket = aws_s3_bucket.csv_bucket.id
   key    = "voter.csv"
   source = "${path.module}/voter.csv"
