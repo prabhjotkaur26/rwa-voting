@@ -17,7 +17,7 @@ resource "aws_s3_bucket" "candidate_images1" {
 # OWNERSHIP CONTROL (IMPORTANT)
 ########################################
 resource "aws_s3_bucket_ownership_controls" "ownership" {
-  bucket = aws_s3_bucket.candidate_images.id
+  bucket = aws_s3_bucket.candidate_images1.id
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -28,7 +28,7 @@ resource "aws_s3_bucket_ownership_controls" "ownership" {
 # BLOCK PUBLIC ACCESS (SECURE)
 ########################################
 resource "aws_s3_bucket_public_access_block" "block" {
-  bucket = aws_s3_bucket.candidate_images.id
+  bucket = aws_s3_bucket.candidate_images1.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -40,7 +40,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
 # VERSIONING (SAFE STORAGE)
 ########################################
 resource "aws_s3_bucket_versioning" "versioning" {
-  bucket = aws_s3_bucket.candidate_images.id
+  bucket = aws_s3_bucket.candidate_images1.id
 
   versioning_configuration {
     status = "Enabled"
@@ -51,7 +51,7 @@ resource "aws_s3_bucket_versioning" "versioning" {
 # SERVER SIDE ENCRYPTION (SECURITY)
 ########################################
 resource "aws_s3_bucket_server_side_encryption_configuration" "enc" {
-  bucket = aws_s3_bucket.candidate_images.id
+  bucket = aws_s3_bucket.candidate_images1.id
 
   rule {
     apply_server_side_encryption_by_default {
