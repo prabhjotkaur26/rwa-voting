@@ -5,7 +5,7 @@ provider "aws" {
 ########################################
 # VOTER REGISTRY TABLE
 ########################################
-resource "aws_dynamodb_table" "voters2" {
+resource "aws_dynamodb_table" "voters22" {
   name         = "rwa-voters"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -24,7 +24,7 @@ resource "aws_dynamodb_table" "voters2" {
 ########################################
 # OTP TABLE (EMAIL OTP)
 ########################################
-resource "aws_dynamodb_table" "otp2" {
+resource "aws_dynamodb_table" "otp22" {
   name         = "rwa-otp"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -48,7 +48,7 @@ resource "aws_dynamodb_table" "otp2" {
 ########################################
 # VOTES TABLE (SECURE)
 ########################################
-resource "aws_dynamodb_table" "votes2" {
+resource "aws_dynamodb_table" "votes22" {
   name         = "rwa-votes"
   billing_mode = "PAY_PER_REQUEST"
 
@@ -74,7 +74,7 @@ resource "aws_dynamodb_table" "votes2" {
 ########################################
 # S3 BUCKET: CSV UPLOAD
 ########################################
-resource "aws_s3_bucket" "csv_bucket" {
+resource "aws_s3_bucket" "csv_bucket1" {
   bucket = "voter-csv-upload-bucket-12345"
 
   tags = {
@@ -170,7 +170,7 @@ resource "aws_s3_object" "voters_csv" {
 # FRONTEND BUCKET
 ########################################
 resource "aws_s3_bucket" "frontend" {
-  bucket = "rwa-frontend-bucket-1234"
+  bucket = "rwa-frontend-bucket-12"
 
   tags = {
     Name        = "frontend"
