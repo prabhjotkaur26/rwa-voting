@@ -11,36 +11,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # -----------------------------
-      # Checkout
-      # -----------------------------
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # -----------------------------
-      # Node Setup (LTS SAFE)
-      # -----------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: npm
 
-      # -----------------------------
-      # Install Dependencies
-      # -----------------------------
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
-      # -----------------------------
-      # Build React App
-      # -----------------------------
       - name: Build Project
         run: npm run build
 
-      # -----------------------------
-      # Configure AWS Credentials
-      # -----------------------------
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -48,9 +33,5 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # -----------------------------
-      # Deploy to S3
-      # -----------------------------
       - name: Deploy to S3
-        run: |
-          aws s3 sync build/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
+        run: aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
