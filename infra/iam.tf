@@ -25,7 +25,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 }
 
 # -------------------------------
-# CUSTOM POLICY (SECURE VERSION)
+# CUSTOM POLICY
 # -------------------------------
 resource "aws_iam_role_policy" "lambda_custom_policy" {
   name = "lambda-custom-policy"
@@ -36,7 +36,7 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
     Statement = [
 
       # -----------------------
-      # DYNAMODB ACCESS (LIMITED)
+      # DYNAMODB ACCESS
       # -----------------------
       {
         Effect = "Allow"
@@ -48,15 +48,15 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "dynamodb:Query"
         ]
         Resource = [
-          aws_dynamodb_table.voters rwa-voters.arn,
-          aws_dynamodb_table.otp rwa-otp.arn,
-          aws_dynamodb_table.votes rwa-votes.arn,
-          aws_dynamodb_table.election rwa-election.arn
+          aws_dynamodb_table.voters.arn,
+          aws_dynamodb_table.otp.arn,
+          aws_dynamodb_table.votes.arn,
+          aws_dynamodb_table.election.arn
         ]
       },
 
       # -----------------------
-      # S3 ACCESS (SAFE)
+      # S3 ACCESS
       # -----------------------
       {
         Effect = "Allow"
@@ -80,7 +80,7 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
       },
 
       # -----------------------
-      # CLOUDWATCH LOGS (EXTRA SAFE)
+      # CLOUDWATCH LOGS
       # -----------------------
       {
         Effect = "Allow"
