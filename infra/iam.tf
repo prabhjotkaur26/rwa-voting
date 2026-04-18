@@ -48,10 +48,10 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "dynamodb:Query"
         ]
         Resource = [
-          aws_dynamodb_table.voters.arn,
-          aws_dynamodb_table.otp.arn,
-          aws_dynamodb_table.votes.arn,
-          aws_dynamodb_table.election.arn
+          aws_dynamodb_table.voters2.arn,
+          aws_dynamodb_table.otp2.arn,
+          aws_dynamodb_table.votes2.arn,
+          aws_dynamodb_table.election2.arn
         ]
       },
 
