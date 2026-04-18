@@ -170,7 +170,7 @@ resource "aws_s3_object" "voters_csv" {
 # FRONTEND BUCKET
 ########################################
 resource "aws_s3_bucket" "frontend" {
-  bucket = "rwa-frontend-bucket-12"
+  bucket = "rwa-frontend-bucket-1234"
 
   tags = {
     Name        = "frontend"
