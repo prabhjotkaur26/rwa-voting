@@ -68,20 +68,6 @@ resource "aws_dynamodb_table" "votes1" {
 }
 
 # -------------------------------
-# DynamoDB: Election Config
-# -------------------------------
-resource "aws_dynamodb_table" "election" {
-  name         = "election-config"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "post_id"
-
-  attribute {
-    name = "post_id"
-    type = "S"
-  }
-}
-
-# -------------------------------
 # S3 Bucket: Frontend Hosting
 # -------------------------------
 resource "aws_s3_bucket" "frontend" {
@@ -154,39 +140,7 @@ resource "aws_iam_role" "lambda_role" {
     }]
   })
 }
-
-# -------------------------------
-# IAM Policy for Lambda
-# -------------------------------
-resource "aws_iam_role_policy" "lambda_policy" {
-  name = "lambda_policy"
-  role = aws_iam_role.lambda_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "dynamodb:PutItem",
-          "dynamodb:BatchWriteItem"
-        ]
-        Resource = aws_dynamodb_table.voters1.arn
-      },
-      {
-        Effect = "Allow"
-        Action = ["s3:GetObject"]
-        Resource = "${aws_s3_bucket.csv_bucket.arn}/*"
-      },
-      {
-        Effect = "Allow"
-        Action = ["logs:*"]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
+     
 # -------------------------------
 # Lambda Function
 # -------------------------------
@@ -195,19 +149,8 @@ resource "aws_lambda_function" "csv_lambda" {
   function_name = "csv_to_dynamodb"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.lambda_handler"
-  runtime       = "python3.9"
-  timeout       = 30
-}
-
-# -------------------------------
-# Lambda Permission
-# -------------------------------
-resource "aws_lambda_permission" "allow_s3" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.csv_lambda.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = aws_s3_bucket.csv_bucket.arn
+  runtime       = "python3.11"
+  timeout       = 300
 }
 
 # -------------------------------
