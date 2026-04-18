@@ -1,7 +1,7 @@
 ############################################
 # VOTER REGISTRY TABLE
 ############################################
-resource "aws_dynamodb_table" "voters" {
+resource "aws_dynamodb_table" "voters2" {
   name         = "voter-registry"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -20,7 +20,7 @@ resource "aws_dynamodb_table" "voters" {
 ############################################
 # OTP TABLE (EMAIL BASED OTP)
 ############################################
-resource "aws_dynamodb_table" "otp" {
+resource "aws_dynamodb_table" "otp2" {
   name         = "otp-table"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -45,7 +45,7 @@ resource "aws_dynamodb_table" "otp" {
 ############################################
 # VOTES TABLE (SECURE + ONE VOTE PER POST)
 ############################################
-resource "aws_dynamodb_table" "votes" {
+resource "aws_dynamodb_table" "votes2" {
   name         = "votes"
   billing_mode = "PAY_PER_REQUEST"
 
@@ -79,7 +79,7 @@ resource "aws_dynamodb_table" "votes" {
 ############################################
 # ELECTION CONFIG TABLE
 ############################################
-resource "aws_dynamodb_table" "election" {
+resource "aws_dynamodb_table" "election2" {
   name         = "election-config"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "post_id"
