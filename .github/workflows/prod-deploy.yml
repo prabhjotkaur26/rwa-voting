@@ -27,6 +27,9 @@ jobs:
         zip -r auth.zip auth/
         zip -r vote.zip vote/
 
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      
     - name: Terraform Init
       run: |
         cd infra
@@ -34,15 +37,15 @@ jobs:
 
     - name: Workspace PROD
       run: |
-        cd Terraform
+        cd infra
         terraform workspace select prod || terraform workspace new prod
 
     - name: Terraform Plan
       run: |
-        cd Terraform
+        cd infra
         terraform plan
 
     - name: Terraform Apply
       run: |
-        cd Terraform
+        cd infra
         terraform apply -auto-approve
