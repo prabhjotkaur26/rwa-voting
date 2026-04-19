@@ -38,7 +38,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "csv_encrypt" {
 ########################################
 data "archive_file" "csv_zip" {
   type        = "zip"
-  source_dir  = "${path.module}/../lambdas/csv_import"
+  source_dir  = "${path.module}/./lambdas/csv_import"
   output_path = "${path.module}/build/csv_lambda.zip"
 }
 
