@@ -1,10 +1,8 @@
+
 ############################################
-# VOTER REGISTRY TABLE
+# VOTERS TABLE
 ############################################
-resource aws_dynamodb_table.voters
-aws_dynamodb_table.otp
-aws_dynamodb_table.votes
-aws_dynamodb_table.election {
+resource "aws_dynamodb_table" "voters" {
   name         = "voter-registry"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -21,9 +19,9 @@ aws_dynamodb_table.election {
 }
 
 ############################################
-# OTP TABLE (EMAIL BASED OTP)
+# OTP TABLE
 ############################################
-resource "aws_dynamodb_table" "rwa-otp" {
+resource "aws_dynamodb_table" "otp" {
   name         = "otp-table"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -33,7 +31,6 @@ resource "aws_dynamodb_table" "rwa-otp" {
     type = "S"
   }
 
-  # ✅ TTL for auto delete expired OTP
   ttl {
     attribute_name = "expiry"
     enabled        = true
@@ -46,13 +43,12 @@ resource "aws_dynamodb_table" "rwa-otp" {
 }
 
 ############################################
-# VOTES TABLE (SECURE + ONE VOTE PER POST)
+# VOTES TABLE
 ############################################
-resource "aws_dynamodb_table" "votes-rwa-votes" {
+resource "aws_dynamodb_table" "votes" {
   name         = "votes"
   billing_mode = "PAY_PER_REQUEST"
 
-  # ✅ Composite key → prevents duplicate vote per post
   hash_key  = "post_id"
   range_key = "voter_id"
 
@@ -66,7 +62,6 @@ resource "aws_dynamodb_table" "votes-rwa-votes" {
     type = "S"
   }
 
-  # ✅ GSI to query votes by voter
   global_secondary_index {
     name            = "voter-index"
     hash_key        = "voter_id"
@@ -82,7 +77,7 @@ resource "aws_dynamodb_table" "votes-rwa-votes" {
 ############################################
 # ELECTION CONFIG TABLE
 ############################################
-resource "aws_dynamodb_table" "election-rwa-election" {
+resource "aws_dynamodb_table" "election" {
   name         = "election-config"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "post_id"
@@ -97,10 +92,3 @@ resource "aws_dynamodb_table" "election-rwa-election" {
     Environment = "prod"
   }
 }
-resource "aws_dynamodb_table" "voters" {}
-
-resource "aws_dynamodb_table" "otp" {}
-
-resource "aws_dynamodb_table" "votes" {}
-
-resource "aws_dynamodb_table" "election" {}
