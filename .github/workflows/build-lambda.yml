@@ -1,0 +1,25 @@
+name: Build Lambda ZIP
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create ZIP
+        run: |
+          mkdir -p infra/build
+          cd lambdas/csv_import
+          zip -r ../../infra/build/csv_lambda.zip .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: csv_lambda
+          path: infra/build/csv_lambda.zip
