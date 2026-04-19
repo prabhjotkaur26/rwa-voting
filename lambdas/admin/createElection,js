@@ -1,19 +1,18 @@
-const { verifyToken } = require("../middleware/auth");
+const AWS = require("aws-sdk");
+const db = new AWS.DynamoDB.DocumentClient();
 
 exports.handler = async (event) => {
-  const user = verifyToken(event);
+  const { name, posts } = JSON.parse(event.body);
 
-  // RBAC CHECK
-  if (user.role !== "admin") {
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ message: "Forbidden - Admin only" }),
-    };
-  }
+  await db.put({
+    TableName: "elections",
+    Item: {
+      id: Date.now().toString(),
+      name,
+      posts: Math.min(posts, 7),
+      status: "SCHEDULED",
+    },
+  }).promise();
 
-  // ✅ ADMIN ONLY LOGIC HERE
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ message: "Election created" }),
-  };
+  return { statusCode: 200, body: "Election created" };
 };
