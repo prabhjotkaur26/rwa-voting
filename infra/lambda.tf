@@ -275,27 +275,3 @@ resource "aws_lambda_function" "results" {
     }
   }
 }
-########################################
-# LAMBDA FUNCTION
-########################################
-resource "aws_lambda_function" "csv_lambda" {
-  function_name = "csv_to_dynamodb"
-  role          = aws_iam_role.lambda_role.arn
-  handler       = "index.lambda_handler"
-  runtime       = "python3.11"
-
-  filename = "${path.root}/infra/build/csv_lambda.zip"
-
-  timeout     = 300
-  memory_size = 512
-
-  environment {
-    variables = {
-      VOTER_TABLE = "voter-registry"
-    }
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.lambda_basic
-  ]
-}
