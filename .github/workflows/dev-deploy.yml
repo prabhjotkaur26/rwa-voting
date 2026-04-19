@@ -31,15 +31,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Build CSV Lambda ZIP
-        run: |
-          mkdir -p infra/build
-          zip -r infra/build/csv_lambda.zip lambdas/csv_import
-
-      - name: Verify ZIP
-        run: |
-          ls -R infra/build
-          
       # ✅ Terraform Install
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
