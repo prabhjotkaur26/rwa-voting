@@ -1,11 +1,19 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET;
+export const verifyToken = (event) => {
+    try {
+        const authHeader = event.headers?.Authorization || event.headers?.authorization;
 
-exports.verifyToken = (event) => {
-  const token = event.headers.Authorization?.replace("Bearer ", "");
+        if (!authHeader) {
+            throw new Error("No token provided");
+        }
 
-  if (!token) throw new Error("No token");
+        const token = authHeader.split(" ")[1];
 
-  return jwt.verify(token, SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        return decoded; // contains email
+    } catch (err) {
+        throw new Error("Unauthorized");
+    }
 };
