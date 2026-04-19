@@ -20,55 +20,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      # ✅ Zip main lambdas (if folders exist)
-      - name: Zip Lambdas
-        run: |
-          cd lambdas
-          zip -r auth.zip auth/ || echo "auth folder not found"
-          zip -r vote.zip vote/ || echo "vote folder not found"
-
-      # ✅ FIXED CSV Lambda ZIP (NO csv folder assumption)
-      - name: Build CSV Lambda ZIP
-        run: |
-          mkdir -p infra/build
-          cd lambdas
-          zip -r csv_lambda.zip .
-          mv csv_lambda.zip ../infra/build/
-
-      # ✅ Debug check
-      - name: Verify ZIP
-        run: |
-          ls -R infra/build
-
-      - name: Configure AWS
+      # ✅ AWS Login
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
+      # ✅ Terraform Install
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      # ✅ Init
       - name: Terraform Init
         run: |
           cd infra
           terraform init
 
+      # ✅ Workspace
       - name: Select Workspace
         run: |
           cd infra
           terraform workspace select dev || terraform workspace new dev
 
+      # ✅ Plan
       - name: Terraform Plan
         run: |
           cd infra
           terraform plan
 
-      # ✅ SAFE apply/destroy handling
+      # ✅ Apply / Destroy
       - name: Terraform Apply or Destroy
         run: |
           cd infra
