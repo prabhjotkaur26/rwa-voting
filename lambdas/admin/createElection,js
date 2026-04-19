@@ -1,0 +1,19 @@
+const { verifyToken } = require("../middleware/auth");
+
+exports.handler = async (event) => {
+  const user = verifyToken(event);
+
+  // RBAC CHECK
+  if (user.role !== "admin") {
+    return {
+      statusCode: 403,
+      body: JSON.stringify({ message: "Forbidden - Admin only" }),
+    };
+  }
+
+  // ✅ ADMIN ONLY LOGIC HERE
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: "Election created" }),
+  };
+};
