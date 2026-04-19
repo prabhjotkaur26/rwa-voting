@@ -33,8 +33,8 @@ jobs:
         run: |
           mkdir -p infra/build
           cd lambdas/csv
-          zip -r csv_lambda.zip .
-          mv csv_lambda.zip ../../infra/build/
+          zip csv_lambda.zip csv_lambda.js
+          mv csv_lambda.zip ../infra/build/
 
       - name: Verify ZIP
         run: |
