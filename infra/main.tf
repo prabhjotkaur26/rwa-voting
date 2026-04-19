@@ -6,11 +6,12 @@ provider "aws" {
 # S3 BUCKET: CSV UPLOAD
 ########################################
 resource "aws_s3_bucket" "csv_bucket1" {
-  bucket = "voter-csv-upload-bucket-12345"
+  bucket        = "voter-csv-upload-bucket-12345"
+  force_destroy = true
 
   tags = {
     Name        = "csv-upload"
-    Environment = "prod"
+    Environment = "dev"
   }
 }
 
@@ -33,12 +34,37 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "csv_encrypt" {
 }
 
 ########################################
-# CSV LAMBDA ZIP
+# ZIP CREATION (AUTO by Terraform)
 ########################################
 data "archive_file" "csv_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/csv_import"
   output_path = "${path.module}/build/csv_lambda.zip"
+}
+
+########################################
+# IAM ROLE (BASIC)
+########################################
+resource "aws_iam_role" "lambda_role" {
+  name = "lambda-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_basic" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 ########################################
@@ -56,13 +82,17 @@ resource "aws_lambda_function" "csv_lambda" {
   timeout     = 300
   memory_size = 512
 
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_basic
+  ]
+
   tags = {
     Name = "csv-lambda"
   }
 }
 
 ########################################
-# LAMBDA PERMISSION FOR S3
+# LAMBDA PERMISSION
 ########################################
 resource "aws_lambda_permission" "allow_s3" {
   statement_id  = "AllowS3Invoke"
@@ -74,7 +104,7 @@ resource "aws_lambda_permission" "allow_s3" {
 }
 
 ########################################
-# S3 EVENT TRIGGER
+# S3 TRIGGER
 ########################################
 resource "aws_s3_bucket_notification" "bucket_notify" {
   bucket = aws_s3_bucket.csv_bucket1.id
@@ -95,18 +125,18 @@ resource "aws_s3_object" "voters_csv" {
   key    = "voters.csv"
 
   source = "${path.module}/../voters.csv"
-  etag   = filemd5("${path.module}/../voters.csv")
 }
 
 ########################################
 # FRONTEND BUCKET
 ########################################
 resource "aws_s3_bucket" "frontend" {
-  bucket = "rwa-frontend-bucket-1234"
+  bucket        = "rwa-frontend-bucket-1234"
+  force_destroy = true
 
   tags = {
     Name        = "frontend"
-    Environment = "prod"
+    Environment = "dev"
   }
 }
 
