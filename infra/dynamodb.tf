@@ -1,7 +1,10 @@
 ############################################
 # VOTER REGISTRY TABLE
 ############################################
-resource "aws_dynamodb_table" "voters-rwa-voters" {
+resource aws_dynamodb_table.voters
+aws_dynamodb_table.otp
+aws_dynamodb_table.votes
+aws_dynamodb_table.election {
   name         = "voter-registry"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
@@ -94,3 +97,10 @@ resource "aws_dynamodb_table" "election-rwa-election" {
     Environment = "prod"
   }
 }
+resource "aws_dynamodb_table" "voters" {}
+
+resource "aws_dynamodb_table" "otp" {}
+
+resource "aws_dynamodb_table" "votes" {}
+
+resource "aws_dynamodb_table" "election" {}
