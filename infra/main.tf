@@ -39,7 +39,7 @@ resource "aws_lambda_function" "csv_lambda" {
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
 
-  filename = "${path.module}/lambdas/csv_import/csv_import.zip"
+  filename = "${path.module}/lambdas/csv_lambda/csv_lambda.zip"
 
   timeout     = 300
   memory_size = 512
