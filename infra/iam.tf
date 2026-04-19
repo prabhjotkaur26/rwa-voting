@@ -1,32 +1,34 @@
-# -------------------------------
+########################################
 # IAM ROLE FOR LAMBDA
-# -------------------------------
+########################################
 resource "aws_iam_role" "lambda_role" {
   name = "lambda-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
       }
-      Action = "sts:AssumeRole"
-    }]
+    ]
   })
 }
 
-# -------------------------------
-# BASIC LAMBDA LOGS POLICY
-# -------------------------------
+########################################
+# BASIC LAMBDA LOGGING POLICY
+########################################
 resource "aws_iam_role_policy_attachment" "lambda_basic" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# -------------------------------
-# CUSTOM POLICY
-# -------------------------------
+########################################
+# CUSTOM POLICY (DYNAMODB + S3 + SES)
+########################################
 resource "aws_iam_role_policy" "lambda_custom_policy" {
   name = "lambda-custom-policy"
   role = aws_iam_role.lambda_role.id
@@ -35,9 +37,9 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
     Version = "2012-10-17"
     Statement = [
 
-      # -----------------------
+      ########################################
       # DYNAMODB ACCESS
-      # -----------------------
+      ########################################
       {
         Effect = "Allow"
         Action = [
@@ -45,19 +47,24 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "dynamodb:GetItem",
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
-          "dynamodb:Query"
+          "dynamodb:Query",
+          "dynamodb:Scan"
         ]
         Resource = [
           aws_dynamodb_table.voters.arn,
           aws_dynamodb_table.otp.arn,
           aws_dynamodb_table.votes.arn,
-          aws_dynamodb_table.election.arn
+          aws_dynamodb_table.election.arn,
+
+          # indexes (important for Query/Scan stability)
+          "${aws_dynamodb_table.voters.arn}/index/*",
+          "${aws_dynamodb_table.votes.arn}/index/*"
         ]
       },
 
-      # -----------------------
-      # S3 ACCESS
-      # -----------------------
+      ########################################
+      # S3 ACCESS (STRICTER THAN "*")
+      ########################################
       {
         Effect = "Allow"
         Action = [
@@ -65,30 +72,20 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "s3:PutObject",
           "s3:ListBucket"
         ]
-        Resource = "*"
+        Resource = [
+          aws_s3_bucket.frontend.arn,
+          "${aws_s3_bucket.frontend.arn}/*"
+        ]
       },
 
-      # -----------------------
+      ########################################
       # SES EMAIL OTP
-      # -----------------------
+      ########################################
       {
         Effect = "Allow"
         Action = [
           "ses:SendEmail",
           "ses:SendRawEmail"
-        ]
-        Resource = "*"
-      },
-
-      # -----------------------
-      # CLOUDWATCH LOGS
-      # -----------------------
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
         ]
         Resource = "*"
       }
