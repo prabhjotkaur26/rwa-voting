@@ -1,33 +1,59 @@
-name: Destroy Infra
+name: Destroy Infrastructure
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
 
 jobs:
   destroy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-south-1
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
 
-    - name: Terraform Init
-      run: |
-        cd terraform
-        terraform init
+      # ✅ Install Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: Terraform Destroy
-      run: |
-        cd terraform
-        terraform destroy -auto-approve
+      # ✅ Init Terraform
+      - name: Terraform Init
+        run: |
+          cd infra
+          terraform init
 
-    - name: Cleanup Backend
-      run: |
-        aws s3 rb s3://rwa-tf-state-bucket --force
-        aws dynamodb delete-table --table-name rwa-tf-lock
+      # ✅ Select Workspace (dev/prod)
+      - name: Select Workspace
+        run: |
+          cd infra
+          terraform workspace select ${{ github.event.inputs.environment }} || echo "Workspace not found"
+
+      # ✅ Destroy Infra
+      - name: Terraform Destroy
+        run: |
+          cd infra
+          terraform destroy -auto-approve
+
+      # ⚠️ Cleanup Backend (ONLY if you want full reset)
+      - name: Cleanup Backend
+        if: ${{ github.event.inputs.environment == 'dev' }}
+        run: |
+          echo "Cleaning backend resources..."
+
+          aws s3 rb s3://rwa-tf-state-bucket --force || echo "Bucket already deleted"
+          aws dynamodb delete-table --table-name rwa-tf-lock || echo "Table already deleted"
