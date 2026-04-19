@@ -10,3 +10,9 @@ export const submitVote = async (data, token) => {
 
   return res.json();
 };
+environment {
+  variables = {
+    VOTES_TABLE = "votes"
+    JWT_SECRET  = "mysecret123"
+  }
+}
