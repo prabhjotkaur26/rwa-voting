@@ -47,7 +47,8 @@ resource "aws_lambda_function" "csv_lambda" {
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
 
- filename = "${path.module}/build/csv_lambda.zip"
+ filename         = data.archive_file.csv_zip.output_path
+source_code_hash = data.archive_file.csv_zip.output_base64sha256
 
   timeout     = 300
   memory_size = 512
