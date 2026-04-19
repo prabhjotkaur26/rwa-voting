@@ -71,8 +71,8 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "s3:ListBucket"
         ]
         Resource = [
-          aws_s3_bucket.csv_bucket1.arn,
-          "${aws_s3_bucket.csv_bucket1.arn}/*"
+         "arn:aws:s3:::voter-csv-upload-bucket-12345",
+         "arn:aws:s3:::voter-csv-upload-bucket-12345/*"
         ]
       },
 
