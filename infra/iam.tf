@@ -55,15 +55,13 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           aws_dynamodb_table.otp.arn,
           aws_dynamodb_table.votes.arn,
           aws_dynamodb_table.election.arn,
-
-          # indexes (important for Query/Scan stability)
           "${aws_dynamodb_table.voters.arn}/index/*",
           "${aws_dynamodb_table.votes.arn}/index/*"
         ]
       },
 
       ########################################
-      # S3 ACCESS (STRICTER THAN "*")
+      # S3 ACCESS (FIXED)
       ########################################
       {
         Effect = "Allow"
@@ -73,8 +71,8 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "s3:ListBucket"
         ]
         Resource = [
-          aws_s3_bucket.frontend.arn,
-          "${aws_s3_bucket.frontend.arn}/*"
+          aws_s3_bucket.csv_bucket1.arn,
+          "${aws_s3_bucket.csv_bucket1.arn}/*"
         ]
       },
 
@@ -92,4 +90,13 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
 
     ]
   })
+
+  # ✅ ensure proper creation order
+  depends_on = [
+    aws_dynamodb_table.voters,
+    aws_dynamodb_table.otp,
+    aws_dynamodb_table.votes,
+    aws_dynamodb_table.election,
+    aws_s3_bucket.csv_bucket1
+  ]
 }
