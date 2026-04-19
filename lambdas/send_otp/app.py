@@ -11,3 +11,9 @@ export const sendOtp = async (email) => {
 
   return res.json();
 };
+environment {
+  variables = {
+    OTP_TABLE   = "otp-table"
+    JWT_SECRET  = "mysecret123"
+  }
+}
