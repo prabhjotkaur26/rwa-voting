@@ -4,15 +4,11 @@
 resource "aws_dynamodb_table" "voters" {
   name         = "voter-registry"
   billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "email"
 
   attribute {
     name = "email"
     type = "S"
-  }
-
-  key_schema {
-    attribute_name = "email"
-    key_type       = "HASH"
   }
 
   tags = {
@@ -27,15 +23,11 @@ resource "aws_dynamodb_table" "voters" {
 resource "aws_dynamodb_table" "otp" {
   name         = "otp-table"
   billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "email"
 
   attribute {
     name = "email"
     type = "S"
-  }
-
-  key_schema {
-    attribute_name = "email"
-    key_type       = "HASH"
   }
 
   ttl {
@@ -56,9 +48,9 @@ resource "aws_dynamodb_table" "votes" {
   name         = "votes"
   billing_mode = "PAY_PER_REQUEST"
 
-  ##################################
-  # ATTRIBUTES
-  ##################################
+  hash_key  = "post_id"
+  range_key = "voter_id"
+
   attribute {
     name = "post_id"
     type = "S"
@@ -69,22 +61,6 @@ resource "aws_dynamodb_table" "votes" {
     type = "S"
   }
 
-  ##################################
-  # PRIMARY KEY
-  ##################################
-  key_schema {
-    attribute_name = "post_id"
-    key_type       = "HASH"
-  }
-
-  key_schema {
-    attribute_name = "voter_id"
-    key_type       = "RANGE"
-  }
-
-  ##################################
-  # GSI (NEW SYNTAX)
-  ##################################
   global_secondary_index {
     name            = "voter-index"
     hash_key        = "voter_id"
@@ -103,15 +79,11 @@ resource "aws_dynamodb_table" "votes" {
 resource "aws_dynamodb_table" "election" {
   name         = "election-config"
   billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "post_id"
 
   attribute {
     name = "post_id"
     type = "S"
-  }
-
-  key_schema {
-    attribute_name = "post_id"
-    key_type       = "HASH"
   }
 
   tags = {
@@ -126,19 +98,10 @@ resource "aws_dynamodb_table" "election" {
 resource "aws_dynamodb_table" "audit" {
   name         = "audit-logs"
   billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"
     type = "S"
-  }
-
-  key_schema {
-    attribute_name = "id"
-    key_type       = "HASH"
-  }
-
-  tags = {
-    Name        = "audit-logs"
-    Environment = "prod"
   }
 }
