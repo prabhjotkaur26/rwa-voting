@@ -38,6 +38,10 @@ jobs:
           zip -r csv_lambda.zip csv_import
           mv csv_lambda.zip ../infra/build/
 
+      - name: Verify ZIP
+        run: |
+          ls -R infra/build
+          
       # ✅ Terraform Install
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
