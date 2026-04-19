@@ -34,9 +34,7 @@ jobs:
       - name: Build CSV Lambda ZIP
         run: |
           mkdir -p infra/build
-          cd lambdas
-          zip -r csv_lambda.zip csv_import
-          mv csv_lambda.zip ../infra/build/
+          zip -r infra/build/csv_lambda.zip lambdas/csv_import
 
       - name: Verify ZIP
         run: |
