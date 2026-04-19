@@ -9,3 +9,8 @@ export const getResults = async () => {
 
   return res.json();
 };
+environment {
+  variables = {
+    VOTES_TABLE = "votes"
+  }
+}
