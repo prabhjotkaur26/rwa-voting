@@ -9,3 +9,9 @@ export const verifyOtp = async (email, otp) => {
 
   return res.json();
 };
+environment {
+  variables = {
+    OTP_TABLE   = "otp-table"
+    JWT_SECRET  = "mysecret123"
+  }
+}
