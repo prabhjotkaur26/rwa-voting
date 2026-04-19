@@ -28,8 +28,8 @@ resource "aws_lambda_function" "auth" {
 
   environment {
     variables = {
-      OTP_TABLE    = aws_dynamodb_table.rwa-otp.name
-      VOTER_TABLE  = aws_dynamodb_table.voters-rwa-voters.name
+      OTP_TABLE    = aws_dynamodb_table.otp.name
+      VOTER_TABLE  = aws_dynamodb_table.voters.name
       SENDER_EMAIL = "your-verified-email@example.com"
       JWT_SECRET   = local.jwt_secret
     }
@@ -59,7 +59,7 @@ resource "aws_lambda_function" "verify" {
 
   environment {
     variables = {
-      OTP_TABLE  = aws_dynamodb_table.rwa-otp.name
+      OTP_TABLE  = aws_dynamodb_table.otp.name
       JWT_SECRET  = local.jwt_secret
     }
   }
@@ -88,8 +88,8 @@ resource "aws_lambda_function" "vote" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes-rwa-votes.name
-      VOTER_TABLE  = aws_dynamodb_table.voters-rwa-voters.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      VOTER_TABLE  = aws_dynamodb_table.voters.name
       JWT_SECRET   = local.jwt_secret
     }
   }
@@ -118,9 +118,9 @@ resource "aws_lambda_function" "admin" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes-rwa-votes.name
-      VOTER_TABLE  = aws_dynamodb_table.voters-rwa-voters.name
-      CONFIG_TABLE = aws_dynamodb_table.election-rwa-election.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
       JWT_SECRET   = local.jwt_secret
     }
   }
@@ -149,8 +149,8 @@ resource "aws_lambda_function" "export" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes-rwa-votes.name
-      CONFIG_TABLE = aws_dynamodb_table.election-rwa-election.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
       BUCKET       = aws_s3_bucket.frontend.bucket
       JWT_SECRET   = local.jwt_secret
     }
@@ -208,8 +208,8 @@ resource "aws_lambda_function" "results" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes-rwa-votes.name
-      CONFIG_TABLE  = aws_dynamodb_table.election-rwa-election.name
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      CONFIG_TABLE  = aws_dynamodb_table.election.name
       JWT_SECRET    = local.jwt_secret
     }
   }
