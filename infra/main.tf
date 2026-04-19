@@ -39,7 +39,8 @@ resource "aws_lambda_function" "csv_lambda" {
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
 
-  filename = "${path.root}/infra/build/csv_lambda.zip"
+  filename         = data.archive_file.csv_lambda_zip.output_path
+  source_code_hash = data.archive_file.cs_lambda_zip.output_base64sha256
 
   timeout     = 300
   memory_size = 512
@@ -51,7 +52,7 @@ resource "aws_lambda_function" "csv_lambda" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.lambda_basic
+    aws_dynamodb_table.voter-registry,
   ]
 }
 
