@@ -36,9 +36,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "csv_encrypt" {
 ########################################
 # ZIP CREATION (AUTO)
 ########################################
-data "archive_file" "csv_zip" {
+{
   type        = "zip"
-  source_dir  = "${path.module}/./lambdas/csv_import"
+  source_dir  = "${path.module}/../lambdas/csv_import"
   output_path = "${path.module}/build/csv_lambda.zip"
 }
 
@@ -51,8 +51,8 @@ resource "aws_lambda_function" "csv_lambda" {
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
 
-  filename         = data.archive_file.csv_zip.output_path
-  source_code_hash = data.archive_file.csv_zip.output_base64sha256
+filename         = "${path.module}/build/csv_lambda.zip"
+source_code_hash = filebase64sha256("${path.module}/build/csv_lambda.zip")
 
   timeout     = 300
   memory_size = 512
