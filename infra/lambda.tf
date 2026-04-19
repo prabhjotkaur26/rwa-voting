@@ -9,11 +9,14 @@ locals {
 # BUILD DIRECTORY CLEANUP (IMPORTANT)
 ########################################
 resource "null_resource" "clean_build" {
+  triggers = {
+    always_run = timestamp()
+  }
+
   provisioner "local-exec" {
     command = "rm -rf ${path.module}/build && mkdir ${path.module}/build"
   }
 }
-
 ########################################
 # AUTH LAMBDA
 ########################################
