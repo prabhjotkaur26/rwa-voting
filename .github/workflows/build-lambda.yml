@@ -1,6 +1,7 @@
 name: Build Lambda ZIP
 
 on:
+ workflow_dispatch: 
   push:
     branches: [ "dev" ]
 
