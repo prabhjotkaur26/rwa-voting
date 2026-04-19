@@ -1,6 +1,6 @@
-# -----------------------------
+########################################
 # HTTP API
-# -----------------------------
+########################################
 resource "aws_apigatewayv2_api" "api" {
   name          = "rwa-api"
   protocol_type = "HTTP"
@@ -13,18 +13,18 @@ resource "aws_apigatewayv2_api" "api" {
   }
 }
 
-# -----------------------------
+########################################
 # DEFAULT STAGE
-# -----------------------------
+########################################
 resource "aws_apigatewayv2_stage" "stage" {
   api_id      = aws_apigatewayv2_api.api.id
   name        = "$default"
   auto_deploy = true
 }
 
-# -----------------------------
-# LAMBDA INTEGRATIONS (STANDARDIZED)
-# -----------------------------
+########################################
+# LAMBDAS MAP
+########################################
 locals {
   lambdas = {
     auth     = aws_lambda_function.auth
@@ -37,31 +37,43 @@ locals {
   }
 }
 
+########################################
+# API INTEGRATIONS
+########################################
 resource "aws_apigatewayv2_integration" "lambda" {
   for_each = local.lambdas
 
-  api_id           = aws_apigatewayv2_api.api.id
-  integration_type = "AWS_PROXY"
-  integration_uri  = each.value.invoke_arn
-
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = each.value.invoke_arn
   payload_format_version = "2.0"
+
+  depends_on = [
+    aws_lambda_function.auth,
+    aws_lambda_function.verify,
+    aws_lambda_function.vote,
+    aws_lambda_function.results,
+    aws_lambda_function.admin,
+    aws_lambda_function.export,
+    aws_lambda_function.download
+  ]
 }
 
-# -----------------------------
+########################################
 # ROUTES
-# -----------------------------
+########################################
 resource "aws_apigatewayv2_route" "routes" {
   for_each = local.lambdas
 
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = "${upper(each.key == "verify" ? "POST" : "POST")} /${each.key}"
+  route_key = "POST /${each.key}"
 
   target = "integrations/${aws_apigatewayv2_integration.lambda[each.key].id}"
 }
 
-# -----------------------------
-# LAMBDA PERMISSIONS (AUTO)
-# -----------------------------
+########################################
+# LAMBDA PERMISSIONS FOR API GATEWAY
+########################################
 resource "aws_lambda_permission" "apigw" {
   for_each = local.lambdas
 
