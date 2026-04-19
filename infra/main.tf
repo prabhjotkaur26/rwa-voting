@@ -34,15 +34,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "csv_encrypt" {
 }
 
 ########################################
-# ZIP CREATION (AUTO)
-########################################
-{
-  type        = "zip"
-  source_dir  = "${path.module}/../lambdas/csv_import"
-  output_path = "${path.module}/build/csv_lambda.zip"
-}
-
-########################################
 # LAMBDA FUNCTION
 ########################################
 resource "aws_lambda_function" "csv_lambda" {
@@ -51,20 +42,22 @@ resource "aws_lambda_function" "csv_lambda" {
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
 
-filename         = "${path.module}/build/csv_lambda.zip"
-source_code_hash = filebase64sha256("${path.module}/build/csv_lambda.zip")
+  # ✅ ZIP FILE FROM CI/CD
+  filename         = "${path.module}/build/csv_lambda.zip"
+  source_code_hash = filebase64sha256("${path.module}/build/csv_lambda.zip")
 
   timeout     = 300
   memory_size = 512
 
-  # 🔥 ADD THIS BLOCK
   environment {
     variables = {
       VOTER_TABLE = "voter-registry"
     }
   }
 
-  depends_on = [data.archive_file.csv_zip]
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_basic
+  ]
 }
 
 ########################################
