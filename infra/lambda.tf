@@ -6,12 +6,23 @@ locals {
 }
 
 ########################################
-# AUTH LAMBDA (EMAIL OTP)
+# BUILD DIRECTORY CLEANUP (IMPORTANT)
+########################################
+resource "null_resource" "clean_build" {
+  provisioner "local-exec" {
+    command = "rm -rf ${path.module}/build && mkdir ${path.module}/build"
+  }
+}
+
+########################################
+# AUTH LAMBDA
 ########################################
 data "archive_file" "auth_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/auth"
   output_path = "${path.module}/build/auth.zip"
+
+  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "auth" {
@@ -23,8 +34,13 @@ resource "aws_lambda_function" "auth" {
   filename         = data.archive_file.auth_zip.output_path
   source_code_hash = data.archive_file.auth_zip.output_base64sha256
 
-  timeout      = 10
-  memory_size  = 256
+  timeout     = 10
+  memory_size = 256
+
+  depends_on = [
+    aws_dynamodb_table.otp,
+    aws_dynamodb_table.voters
+  ]
 
   environment {
     variables = {
@@ -43,6 +59,8 @@ data "archive_file" "verify_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/verify"
   output_path = "${path.module}/build/verify.zip"
+
+  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "verify" {
@@ -54,8 +72,12 @@ resource "aws_lambda_function" "verify" {
   filename         = data.archive_file.verify_zip.output_path
   source_code_hash = data.archive_file.verify_zip.output_base64sha256
 
-  timeout      = 10
-  memory_size  = 256
+  timeout     = 10
+  memory_size = 256
+
+  depends_on = [
+    aws_dynamodb_table.otp
+  ]
 
   environment {
     variables = {
@@ -66,12 +88,14 @@ resource "aws_lambda_function" "verify" {
 }
 
 ########################################
-# VOTE LAMBDA (ONE VOTE PER USER PER POST)
+# VOTE LAMBDA
 ########################################
 data "archive_file" "vote_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/vote"
   output_path = "${path.module}/build/vote.zip"
+
+  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "vote" {
@@ -83,14 +107,19 @@ resource "aws_lambda_function" "vote" {
   filename         = data.archive_file.vote_zip.output_path
   source_code_hash = data.archive_file.vote_zip.output_base64sha256
 
-  timeout      = 10
-  memory_size  = 256
+  timeout     = 10
+  memory_size = 256
+
+  depends_on = [
+    aws_dynamodb_table.votes,
+    aws_dynamodb_table.voters
+  ]
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
-      JWT_SECRET   = local.jwt_secret
+      VOTE_TABLE  = aws_dynamodb_table.votes.name
+      VOTER_TABLE = aws_dynamodb_table.voters.name
+      JWT_SECRET  = local.jwt_secret
     }
   }
 }
@@ -102,6 +131,8 @@ data "archive_file" "admin_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/admin"
   output_path = "${path.module}/build/admin.zip"
+
+  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "admin" {
@@ -113,8 +144,14 @@ resource "aws_lambda_function" "admin" {
   filename         = data.archive_file.admin_zip.output_path
   source_code_hash = data.archive_file.admin_zip.output_base64sha256
 
-  timeout      = 10
-  memory_size  = 256
+  timeout     = 10
+  memory_size = 256
+
+  depends_on = [
+    aws_dynamodb_table.votes,
+    aws_dynamodb_table.voters,
+    aws_dynamodb_table.election
+  ]
 
   environment {
     variables = {
@@ -127,12 +164,14 @@ resource "aws_lambda_function" "admin" {
 }
 
 ########################################
-# EXPORT LAMBDA (CSV/PDF)
+# EXPORT LAMBDA
 ########################################
 data "archive_file" "export_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/export"
   output_path = "${path.module}/build/export.zip"
+
+  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "export" {
@@ -144,8 +183,14 @@ resource "aws_lambda_function" "export" {
   filename         = data.archive_file.export_zip.output_path
   source_code_hash = data.archive_file.export_zip.output_base64sha256
 
-  timeout      = 15
-  memory_size  = 512
+  timeout     = 15
+  memory_size = 512
+
+  depends_on = [
+    aws_dynamodb_table.votes,
+    aws_dynamodb_table.election,
+    aws_s3_bucket.frontend
+  ]
 
   environment {
     variables = {
@@ -164,6 +209,8 @@ data "archive_file" "download_zip" {
   type        = "zip"
   source_file = "${path.module}/../lambdas/download/download.py"
   output_path = "${path.module}/build/download.zip"
+
+  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "download" {
@@ -175,8 +222,12 @@ resource "aws_lambda_function" "download" {
   filename         = data.archive_file.download_zip.output_path
   source_code_hash = data.archive_file.download_zip.output_base64sha256
 
-  timeout      = 10
-  memory_size  = 256
+  timeout     = 10
+  memory_size = 256
+
+  depends_on = [
+    aws_s3_bucket.frontend
+  ]
 
   environment {
     variables = {
@@ -186,12 +237,14 @@ resource "aws_lambda_function" "download" {
 }
 
 ########################################
-# RESULTS LAMBDA (PUBLIC VIEW CONTROLLED)
+# RESULTS LAMBDA
 ########################################
 data "archive_file" "results_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/results"
   output_path = "${path.module}/build/results.zip"
+
+  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "results" {
@@ -203,8 +256,13 @@ resource "aws_lambda_function" "results" {
   filename         = data.archive_file.results_zip.output_path
   source_code_hash = data.archive_file.results_zip.output_base64sha256
 
-  timeout      = 10
-  memory_size  = 256
+  timeout     = 10
+  memory_size = 256
+
+  depends_on = [
+    aws_dynamodb_table.votes,
+    aws_dynamodb_table.election
+  ]
 
   environment {
     variables = {
