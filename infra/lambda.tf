@@ -120,9 +120,9 @@ resource "aws_lambda_function" "vote" {
 
   environment {
     variables = {
-      VOTE_TABLE  = aws_dynamodb_table.votes.name
-      VOTER_TABLE = aws_dynamodb_table.voters.name
-      JWT_SECRET  = local.jwt_secret
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      JWT_SECRET   = "mysecret123"
     }
   }
 }
@@ -198,9 +198,9 @@ resource "aws_lambda_function" "export" {
   environment {
     variables = {
       VOTE_TABLE   = aws_dynamodb_table.votes.name
-      CONFIG_TABLE = aws_dynamodb_table.election.name
-      BUCKET       = aws_s3_bucket.frontend.bucket
-      JWT_SECRET   = local.jwt_secret
+      CONFIG_TABLE  = aws_dynamodb_table.election.name
+      BUCKET        = aws_s3_bucket.candidate_images.bucket
+      JWT_SECRET    = "mysecret123"
     }
   }
 }
@@ -271,7 +271,7 @@ resource "aws_lambda_function" "results" {
     variables = {
       VOTE_TABLE   = aws_dynamodb_table.votes.name
       CONFIG_TABLE  = aws_dynamodb_table.election.name
-      JWT_SECRET    = local.jwt_secret
+      JWT_SECRET    = "mysecret123"
     }
   }
 }
