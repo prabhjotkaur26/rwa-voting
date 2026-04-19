@@ -1,4 +1,4 @@
-export const verifyOtp = async (mobile, otp) => {
+export const verifyOtp = async (email, otp) => {
   const res = await fetch(`${BASE_URL}/auth/verify`, {
     method: "POST",
     headers: {
