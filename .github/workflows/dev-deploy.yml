@@ -29,13 +29,17 @@ jobs:
           zip -r auth.zip auth/
           zip -r vote.zip vote/
 
-      - name: Build CSV Lambda
+      - name: Build CSV Lambda ZIP
         run: |
           mkdir -p infra/build
-          cd lambdas
+          cd lambdas/csv
           zip -r csv_lambda.zip .
-          mv csv_lambda.zip ../infra/build/
-          
+          mv csv_lambda.zip ../../infra/build/
+
+      - name: Verify ZIP
+        run: |
+          ls -R infra/build
+                
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
