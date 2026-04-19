@@ -32,6 +32,14 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "csv_encrypt" {
     }
   }
 }
+############################################
+# ZIP CREATION (TERRAFORM BUILDS ZIP)
+############################################
+data "archive_file" "csv_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambdas/csv_import"
+  output_path = "${path.module}/build/csv_lambda.zip"
+}
 
 resource "aws_lambda_function" "csv_lambda" {
   function_name = "csv_to_dynamodb"
