@@ -69,11 +69,6 @@ resource "aws_lambda_function" "csv_lambda" {
   ]
 }
 
-  tags = {
-    Name = "csv-lambda"
-  }
-}
-
 ########################################
 # LAMBDA PERMISSION
 ########################################
