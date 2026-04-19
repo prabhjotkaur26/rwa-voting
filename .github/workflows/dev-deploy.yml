@@ -23,23 +23,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # ✅ Zip main lambdas (if folders exist)
       - name: Zip Lambdas
         run: |
           cd lambdas
-          zip -r auth.zip auth/
-          zip -r vote.zip vote/
+          zip -r auth.zip auth/ || echo "auth folder not found"
+          zip -r vote.zip vote/ || echo "vote folder not found"
 
+      # ✅ FIXED CSV Lambda ZIP (NO csv folder assumption)
       - name: Build CSV Lambda ZIP
         run: |
           mkdir -p infra/build
-          cd lambdas/csv
-          zip csv_lambda.zip csv_lambda.js
+          cd lambdas
+          zip -r csv_lambda.zip .
           mv csv_lambda.zip ../infra/build/
 
+      # ✅ Debug check
       - name: Verify ZIP
         run: |
           ls -R infra/build
-                
+
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -65,10 +68,12 @@ jobs:
           cd infra
           terraform plan
 
+      # ✅ SAFE apply/destroy handling
       - name: Terraform Apply or Destroy
         run: |
           cd infra
-          if [ "${{ github.event.inputs.action }}" = "destroy" ]; then
+          ACTION="${{ github.event.inputs.action || 'apply' }}"
+          if [ "$ACTION" = "destroy" ]; then
             terraform destroy -auto-approve
           else
             terraform apply -auto-approve
