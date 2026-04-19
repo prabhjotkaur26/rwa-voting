@@ -64,9 +64,7 @@ resource "aws_lambda_function" "csv_lambda" {
     }
   }
 
-  depends_on = [
-    aws_iam_role_policy_attachment.lambda_basic
-  ]
+  depends_on = [data.archive_file.csv_zip]
 }
 
 ########################################
