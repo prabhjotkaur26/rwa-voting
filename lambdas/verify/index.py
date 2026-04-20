@@ -1,17 +1,20 @@
-export const verifyOtp = async (email, otp) => {
-  const res = await fetch(`${BASE_URL}/auth/verify`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, otp }),
-  });
+import { response } from "../shared/response.js";
+import AWS from "aws-sdk";
 
-  return res.json();
-};
-environment {
-  variables = {
-    OTP_TABLE   = "otp-table"
-    JWT_SECRET  = "mysecret123"
+const db = new AWS.DynamoDB.DocumentClient();
+
+export const handler = async (event) => {
+
+  const { email, otp } = JSON.parse(event.body);
+
+  const data = await db.get({
+    TableName: "OTP_TABLE",
+    Key: { email }
+  }).promise();
+
+  if (!data.Item || data.Item.otp != otp) {
+    return response(401, { message: "Invalid OTP" });
   }
-}
+
+  return response(200, { message: "Login Success" });
+};
