@@ -66,7 +66,13 @@ resource "aws_apigatewayv2_route" "routes" {
   for_each = local.lambdas
 
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = "POST /${each.key}"
+  locals {
+  lambdas = {
+    "send-otp" = aws_lambda_function.auth
+    "verify-otp" = aws_lambda_function.verify
+    vote = aws_lambda_function.vote
+  }
+}
 
   target = "integrations/${aws_apigatewayv2_integration.lambda[each.key].id}"
 }
