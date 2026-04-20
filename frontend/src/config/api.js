@@ -1,1 +1,1 @@
-export const API = "https://YOUR_API_GATEWAY_URL/prod";
+export const API = "https://trdhtio0rc.execute-api.ap-south-1.amazonaws.com/prod";
