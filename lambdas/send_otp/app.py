@@ -27,7 +27,7 @@ export const handler = async (event) => {
     }).promise();
 
     await ses.sendEmail({
-      Source: "your_verified_email@gmail.com",
+      Source: "prabh008968@gmail.com",
       Destination: { ToAddresses: [email] },
       Message: {
         Subject: { Data: "RWA Voting OTP" },
