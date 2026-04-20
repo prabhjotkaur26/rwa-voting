@@ -1,5 +1,5 @@
 // SEND OTP
-fetch("https://YOUR_API_GATEWAY/send-otp", {
+fetch("https://YOUR_API_GATEWAY/auth", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ email })
