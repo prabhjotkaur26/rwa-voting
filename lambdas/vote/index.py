@@ -1,18 +1,17 @@
-export const submitVote = async (data, token) => {
-  const res = await fetch(`${BASE_URL}/vote`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
+import AWS from "aws-sdk";
+import { response } from "../shared/response.js";
 
-  return res.json();
+const db = new AWS.DynamoDB.DocumentClient();
+
+export const handler = async (event) => {
+
+  const { voterId, candidateId, postId } = JSON.parse(event.body);
+
+  await db.put({
+    TableName: "VOTES",
+    Item: { voterId, candidateId, postId },
+    ConditionExpression: "attribute_not_exists(voterId)"
+  }).promise();
+
+  return response(200, { message: "Vote Cast Successfully" });
 };
-environment {
-  variables = {
-    VOTES_TABLE = "votes"
-    JWT_SECRET  = "mysecret123"
-  }
-}
