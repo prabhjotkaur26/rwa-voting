@@ -1,19 +1,31 @@
-import { BASE_URL } from "../config/api";
+import AWS from "aws-sdk";
+import { response } from "../shared/response.js";
 
-export const sendOtp = async (email) => {
-  const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-  });
+const ses = new AWS.SES();
+const db = new AWS.DynamoDB.DocumentClient();
 
-  return res.json();
+export const handler = async (event) => {
+
+  const { email } = JSON.parse(event.body);
+  const otp = Math.floor(100000 + Math.random() * 900000);
+
+  await db.put({
+    TableName: "OTP_TABLE",
+    Item: {
+      email,
+      otp,
+      ttl: Math.floor(Date.now()/1000) + 300
+    }
+  }).promise();
+
+  await ses.sendEmail({
+    Source: "your_verified_email@gmail.com",
+    Destination: { ToAddresses: [email] },
+    Message: {
+      Subject: { Data: "RWA Voting OTP" },
+      Body: { Text: { Data: `Your OTP is ${otp}` } }
+    }
+  }).promise();
+
+  return response(200, { message: "OTP sent" });
 };
-environment {
-  variables = {
-    OTP_TABLE   = "otp-table"
-    JWT_SECRET  = "mysecret123"
-  }
-}
