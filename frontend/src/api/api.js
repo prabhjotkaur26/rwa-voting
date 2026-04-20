@@ -1,4 +1,4 @@
-import { API } from "./config";
+import { API } from "./config/api.js";
 
 export const sendOtp = (email) =>
   fetch(`${API}/send-otp`, {
