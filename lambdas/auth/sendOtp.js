@@ -1,7 +1,7 @@
 const { checkLimit } = require("../utils/otpLimiter");
 
 exports.handler = async (event) => {
-  const { mobile } = JSON.parse(event.body);
+  const { email } = JSON.parse(event.body);
 
   // 🔐 OTP abuse protection (IMPORTANT)
   await checkLimit(email);
