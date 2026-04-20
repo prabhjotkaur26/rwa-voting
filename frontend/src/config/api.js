@@ -1,1 +1,1 @@
-export const BASE_URL = "https://trdhtio0rc.execute-api.ap-south-1.amazonaws.com/prod"
+export const API = "https://YOUR_API_GATEWAY_ID.execute-api.region.amazonaws.com/prod";
