@@ -1,31 +1,59 @@
 import AWS from "aws-sdk";
-import { response } from "../shared/response.js";
 
 const ses = new AWS.SES();
 const db = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event) => {
+  try {
 
-  const { email } = JSON.parse(event.body);
-  const otp = Math.floor(100000 + Math.random() * 900000);
+    const { email } = JSON.parse(event.body);
 
-  await db.put({
-    TableName: "OTP_TABLE",
-    Item: {
-      email,
-      otp,
-      ttl: Math.floor(Date.now()/1000) + 300
+    if (!email) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "Email required" })
+      };
     }
-  }).promise();
 
-  await ses.sendEmail({
-    Source: "your_verified_email@gmail.com",
-    Destination: { ToAddresses: [email] },
-    Message: {
-      Subject: { Data: "RWA Voting OTP" },
-      Body: { Text: { Data: `Your OTP is ${otp}` } }
-    }
-  }).promise();
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
-  return response(200, { message: "OTP sent" });
+    await db.put({
+      TableName: "OTP_TABLE",
+      Item: {
+        email,
+        otp,
+        ttl: Math.floor(Date.now()/1000) + 300
+      }
+    }).promise();
+
+    await ses.sendEmail({
+      Source: "your_verified_email@gmail.com",
+      Destination: { ToAddresses: [email] },
+      Message: {
+        Subject: { Data: "RWA Voting OTP" },
+        Body: {
+          Text: { Data: `Your OTP is ${otp}` }
+        }
+      }
+    }).promise();
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*"
+      },
+      body: JSON.stringify({ message: "OTP sent successfully" })
+    };
+
+  } catch (error) {
+    console.log("OTP ERROR:", error);
+
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: "OTP failed",
+        error: error.message
+      })
+    };
+  }
 };
