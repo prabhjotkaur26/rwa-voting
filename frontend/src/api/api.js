@@ -1,17 +1,22 @@
-import axios from "axios";
+import { API } from "./config";
 
-const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL
-});
+export const sendOtp = (email) =>
+  fetch(`${API}/send-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
 
-// Send OTP
-export const sendOtp = (email) => {
-  return API.post("/auth/send-otp", { email });
-};
+export const verifyOtp = (email, otp) =>
+  fetch(`${API}/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp })
+  });
 
-// Verify OTP
-export const verifyOtp = (email, otp) => {
-  return API.post("/auth/verify-otp", { email, otp });
-};
-
-export default API;
+export const vote = (data) =>
+  fetch(`${API}/vote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
