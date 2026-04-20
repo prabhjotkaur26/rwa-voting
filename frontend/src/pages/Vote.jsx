@@ -1,7 +1,11 @@
-fetch(`${API_BASE_URL}/vote`, {
+fetch("https://YOUR_API_GATEWAY/vote", {
   method: "POST",
   headers: {
-    "Content-Type": "application/json"
+    "Authorization": token
   },
-  body: JSON.stringify({ candidateId })
+  body: JSON.stringify({
+    voterId,
+    candidateId,
+    postId
+  })
 });
