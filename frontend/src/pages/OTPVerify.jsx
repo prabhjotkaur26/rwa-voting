@@ -1,7 +1,6 @@
-fetch(`${API_BASE_URL}/auth/send-otp`, {
+// SEND OTP
+fetch("https://YOUR_API_GATEWAY/send-otp", {
   method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ email })
 });
