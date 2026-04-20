@@ -1,4 +1,3 @@
-import { response } from "../shared/response.js";
 import AWS from "aws-sdk";
 
 const db = new AWS.DynamoDB.DocumentClient();
@@ -13,8 +12,14 @@ export const handler = async (event) => {
   }).promise();
 
   if (!data.Item || data.Item.otp != otp) {
-    return response(401, { message: "Invalid OTP" });
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ message: "Invalid OTP" })
+    };
   }
 
-  return response(200, { message: "Login Success" });
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ message: "Login Success" })
+  };
 };
