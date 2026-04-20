@@ -1,3 +1,4 @@
+
 ########################################
 # HTTP API
 ########################################
@@ -23,65 +24,50 @@ resource "aws_apigatewayv2_stage" "stage" {
 }
 
 ########################################
-# LAMBDAS MAP
-########################################
-locals {
-  lambdas = {
-    auth     = aws_lambda_function.auth
-    verify   = aws_lambda_function.verify
-    vote     = aws_lambda_function.vote
-    results  = aws_lambda_function.results
-    admin    = aws_lambda_function.admin
-    export   = aws_lambda_function.export
-    download = aws_lambda_function.download
-  }
-}
-
-########################################
-# API INTEGRATIONS
+# API INTEGRATIONS (LAMBDA MAP)
 ########################################
 resource "aws_apigatewayv2_integration" "lambda" {
-  for_each = local.lambdas
+  for_each = {
+    "send-otp"   = aws_lambda_function.auth
+    "verify-otp" = aws_lambda_function.verify
+    "vote"       = aws_lambda_function.vote
+    "results"    = aws_lambda_function.results
+    "admin"      = aws_lambda_function.admin
+    "export"     = aws_lambda_function.export
+    "download"   = aws_lambda_function.download
+  }
 
   api_id                 = aws_apigatewayv2_api.api.id
   integration_type       = "AWS_PROXY"
   integration_uri        = each.value.invoke_arn
   payload_format_version = "2.0"
-
-  depends_on = [
-    aws_lambda_function.auth,
-    aws_lambda_function.verify,
-    aws_lambda_function.vote,
-    aws_lambda_function.results,
-    aws_lambda_function.admin,
-    aws_lambda_function.export,
-    aws_lambda_function.download
-  ]
 }
 
 ########################################
-# ROUTES
+# ROUTES (IMPORTANT FIX)
 ########################################
 resource "aws_apigatewayv2_route" "routes" {
-  for_each = local.lambdas
+  for_each = aws_apigatewayv2_integration.lambda
 
   api_id    = aws_apigatewayv2_api.api.id
-  locals {
-  lambdas = {
-    "send-otp" = aws_lambda_function.auth
-    "verify-otp" = aws_lambda_function.verify
-    vote = aws_lambda_function.vote
-  }
-}
+  route_key = "POST /${each.key}"
 
-  target = "integrations/${aws_apigatewayv2_integration.lambda[each.key].id}"
+  target = "integrations/${each.value.id}"
 }
 
 ########################################
-# LAMBDA PERMISSIONS FOR API GATEWAY
+# LAMBDA PERMISSIONS
 ########################################
 resource "aws_lambda_permission" "apigw" {
-  for_each = local.lambdas
+  for_each = {
+    "send-otp"   = aws_lambda_function.auth
+    "verify-otp" = aws_lambda_function.verify
+    "vote"       = aws_lambda_function.vote
+    "results"    = aws_lambda_function.results
+    "admin"      = aws_lambda_function.admin
+    "export"     = aws_lambda_function.export
+    "download"   = aws_lambda_function.download
+  }
 
   statement_id  = "AllowAPIGateway-${each.key}"
   action        = "lambda:InvokeFunction"
