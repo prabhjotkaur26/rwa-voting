@@ -13,5 +13,9 @@ export const handler = async (event) => {
     ConditionExpression: "attribute_not_exists(voterId)"
   }).promise();
 
-  return response(200, { message: "Vote Cast Successfully" });
+  return response(200, 
+     headers: {
+    "Access-Control-Allow-Origin": "*"
+  },            
+body: JSON.stringify({ message: "Vote Cast Successfully" })
 };
