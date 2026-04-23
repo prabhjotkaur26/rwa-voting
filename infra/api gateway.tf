@@ -50,7 +50,7 @@ resource "aws_apigatewayv2_route" "routes" {
   for_each = aws_apigatewayv2_integration.lambda
 
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = "POST /${each.key}"
+  route_key = each.key == "results" ? "ANY /results" : "POST /${each.key}"
 
   target = "integrations/${each.value.id}"
 }

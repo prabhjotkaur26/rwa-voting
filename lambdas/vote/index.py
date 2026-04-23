@@ -1,21 +1,76 @@
-import AWS from "aws-sdk";
-import { response } from "../shared/response.js";
+import json
+import boto3
+import jwt
+import os
+from datetime import datetime
 
-const db = new AWS.DynamoDB.DocumentClient();
+# AWS CLIENTS
+dynamodb = boto3.resource("dynamodb")
+votes_table = dynamodb.Table(os.environ["VOTES_TABLE"])
 
-export const handler = async (event) => {
+SECRET = os.environ["JWT_SECRET"]
 
-  const { voterId, candidateId, postId } = JSON.parse(event.body);
+def lambda_handler(event, context):
+    try:
+        print("EVENT:", event)
 
-  await db.put({
-    TableName: "VOTES",
-    Item: { voterId, candidateId, postId },
-    ConditionExpression: "attribute_not_exists(voterId)"
-  }).promise();
+        # AUTH CHECK
+        headers = event.get("headers") or {}
+        auth = headers.get("Authorization") or headers.get("authorization")
 
-  return response(200, 
-     headers: {
-    "Access-Control-Allow-Origin": "*"
-  },            
-body: JSON.stringify({ message: "Vote Cast Successfully" })
-};
+        if not auth or not auth.startswith("Bearer "):
+            return response(401, {"message": "Unauthorized"})
+
+        token = auth.split(" ")[1]
+
+        try:
+            payload = jwt.decode(token, SECRET, algorithms=["HS256"])
+            email = payload["email"]
+        except jwt.ExpiredSignatureError:
+            return response(401, {"message": "Token expired"})
+        except jwt.InvalidTokenError:
+            return response(401, {"message": "Invalid token"})
+
+        # Parse request body
+        body = event.get("body")
+
+        if not body:
+            return response(400, {"message": "Request body is required"})
+
+        if isinstance(body, str):
+            body = json.loads(body)
+
+        email = body.get("email")
+        electionId = body.get("electionId")
+        votes = body.get("votes")
+
+        if not email or not electionId or not votes:
+            return response(400, {"message": "email, electionId, and votes are required"})
+
+        # Submit votes
+        for post, candidate in votes.items():
+            votes_table.put_item(
+                Item={
+                    "PK": f"{electionId}#{post}",
+                    "SK": email,
+                    "candidateId": candidate,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+
+        return response(200, {"message": "Vote submitted successfully"})
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return response(500, {"message": "Internal server error"})
+
+
+def response(status, body):
+    return {
+        "statusCode": status,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+        },
+        "body": json.dumps(body)
+    }

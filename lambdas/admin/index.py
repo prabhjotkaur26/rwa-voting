@@ -106,6 +106,42 @@ def lambda_handler(event, context):
             return response(200, {"message": "Election created"})
 
         # ====================================================
+        # ADD CANDIDATE
+        # ====================================================
+        elif action == "add_candidate":
+
+            post = body.get("post")
+            candidate = body.get("candidate")
+
+            if not post or not candidate:
+                return response(400, {"message": "post and candidate required"})
+
+            # Get existing
+            res = config_table.get_item(Key={"post_id": post})
+
+            if "Item" not in res:
+                return response(400, {"message": "Election not found"})
+
+            item = res["Item"]
+            candidates = item.get("candidates", [])
+
+            if candidate in candidates:
+                return response(400, {"message": "Candidate already exists"})
+
+            if len(candidates) >= 7:
+                return response(400, {"message": "Max 7 candidates allowed"})
+
+            candidates.append(candidate)
+
+            config_table.update_item(
+                Key={"post_id": post},
+                UpdateExpression="SET candidates = :val",
+                ExpressionAttributeValues={":val": candidates}
+            )
+
+            return response(200, {"message": "Candidate added"})
+
+        # ====================================================
         # START ELECTION
         # ====================================================
         elif action == "start_election":

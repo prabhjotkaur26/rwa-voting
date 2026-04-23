@@ -1,16 +1,14 @@
-# React + Vite
+# RWA Voting (Python Only)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository now contains only the Python implementation of the voting backend and related AWS Lambda functions.
 
-Currently, two official plugins are available:
+## Contents
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `lambdas/` - Python-based Lambda functions and JWT helper modules
+- `jwt/` - Python JWT utilities for token signing and verification
+- `infra/` - Terraform infrastructure as code
+- `pyjwt-2.12.1.dist-info/` - vendored Python package metadata
 
-## React Compiler
+## Notes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The previous Node.js frontend and backend projects have been removed. The repository is now focused on Python-based serverless functionality.
