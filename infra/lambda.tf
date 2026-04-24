@@ -5,18 +5,19 @@ locals {
   jwt_secret = "CHANGE_THIS_IN_PRODUCTION"
 }
 
-########################################
-# BUILD DIRECTORY CLEANUP (IMPORTANT)
-########################################
-resource "null_resource" "clean_build" {
-  triggers = {
-    always_run = timestamp()
-  }
+# ########################################
+# # BUILD DIRECTORY CLEANUP (IMPORTANT)
+# ########################################
+# resource "null_resource" "clean_build" {
+#   triggers = {
+#     always_run = timestamp()
+#   }
 
-  provisioner "local-exec" {
-    command = "rm -rf ${path.module}/build && mkdir ${path.module}/build"
-  }
-}
+#   provisioner "local-exec" {
+#     command = "if exist build rmdir /s /q build && mkdir build"
+#     interpreter = ["cmd", "/c"]
+#   }
+# }
 ########################################
 # AUTH LAMBDA
 ########################################
@@ -24,8 +25,6 @@ data "archive_file" "auth_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/auth"
   output_path = "${path.module}/build/auth.zip"
-
-  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "auth" {
@@ -62,8 +61,6 @@ data "archive_file" "verify_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/verify"
   output_path = "${path.module}/build/verify.zip"
-
-  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "verify" {
@@ -97,8 +94,6 @@ data "archive_file" "vote_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/vote"
   output_path = "${path.module}/build/vote.zip"
-
-  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "vote" {
@@ -134,8 +129,6 @@ data "archive_file" "admin_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/admin"
   output_path = "${path.module}/build/admin.zip"
-
-  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "admin" {
@@ -173,8 +166,6 @@ data "archive_file" "export_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/export"
   output_path = "${path.module}/build/export.zip"
-
-  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "export" {
@@ -213,7 +204,6 @@ data "archive_file" "download_zip" {
   source_file = "${path.module}/../lambdas/download/download.py"
   output_path = "${path.module}/build/download.zip"
 
-  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "download" {
@@ -246,8 +236,6 @@ data "archive_file" "results_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/results"
   output_path = "${path.module}/build/results.zip"
-
-  depends_on = [null_resource.clean_build]
 }
 
 resource "aws_lambda_function" "results" {
