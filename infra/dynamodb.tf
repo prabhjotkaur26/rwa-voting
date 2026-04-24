@@ -48,23 +48,17 @@ resource "aws_dynamodb_table" "votes" {
   name         = "votes"
   billing_mode = "PAY_PER_REQUEST"
 
-  hash_key  = "post_id"
-  range_key = "voter_id"
+  hash_key  = "PK"
+  range_key = "SK"
 
   attribute {
-    name = "post_id"
+    name = "PK"
     type = "S"
   }
 
   attribute {
-    name = "voter_id"
+    name = "SK"
     type = "S"
-  }
-
-  global_secondary_index {
-    name            = "voter-index"
-    hash_key        = "voter_id"
-    projection_type = "ALL"
   }
 
   tags = {

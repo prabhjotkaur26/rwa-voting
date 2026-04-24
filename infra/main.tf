@@ -125,8 +125,6 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
     key = "index.html"
   }
 }
-<<<<<<< HEAD
-=======
 
 # Public access (for frontend hosting)
 resource "aws_s3_bucket_public_access_block" "frontend" {
@@ -163,4 +161,3 @@ resource "aws_sns_topic" "otp_topic" {
     Project = "RWA-Voting"
   }
 }
->>>>>>> ceb7747 (commit)

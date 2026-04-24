@@ -120,9 +120,9 @@ resource "aws_lambda_function" "vote" {
 
   environment {
     variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      VOTES_TABLE  = aws_dynamodb_table.votes.name
       VOTER_TABLE  = aws_dynamodb_table.voters.name
-      JWT_SECRET   = "mysecret123"
+      JWT_SECRET   = local.jwt_secret
     }
   }
 }

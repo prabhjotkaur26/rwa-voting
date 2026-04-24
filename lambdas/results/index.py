@@ -33,12 +33,14 @@ def lambda_handler(event, context):
         if path == "/results" and method == "GET":
             data = votes_table.scan()
 
-            votes = [
-                {"vote": item.get("candidateId")}
-                for item in data.get("Items", [])
-            ]
+            result = {}
 
-            return response(200, votes)
+            for item in data.get("Items", []):
+                candidate = item.get("candidateId")
+                if candidate:
+                    result[candidate] = result.get(candidate, 0) + 1
+
+            return response(200, result)
 
         # -----------------------------
         # GET RESULTS BY electionId + postId
