@@ -43,25 +43,23 @@ def lambda_handler(event, context):
         # -----------------------------
         # INSERT INTO DYNAMODB
         # -----------------------------
-        for row in reader:
+      with table.batch_writer() as batch:
+    for row in reader:
+        email = (row.get("email") or "").strip().lower()
 
-            email = (row.get("email") or "").strip().lower()
+        if not email:
+            print(f"Skipping row (missing email): {row}")
+            continue
 
-            if not email:
-                print("Skipping row (missing email):", row)
-                continue
+        item = {
+            "email": email,
+            "name": (row.get("name") or "").strip(),
+            "flatNumber": (row.get("flatNumber") or "").strip(),
+            "voterStatus": (row.get("voterStatus") or "ACTIVE").strip()
+        }
 
-            try:
-                table.put_item(
-                    Item={
-                        "email": email,
-                        "name": row.get("name", "").strip(),
-                        "flatNumber": row.get("flatNumber", "").strip(),
-                        "voterStatus": row.get("voterStatus", "ACTIVE").strip()
-                    }
-                )
-                count += 1
-
+        batch.put_item(Item=item)
+        count += 1
             except Exception as db_error:
                 print("DynamoDB insert failed for row:", row)
                 print(str(db_error))
