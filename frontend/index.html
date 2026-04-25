@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RWA Voting</title>
+  <link rel="stylesheet" href="./static/style.css">
+</head>
+<body>
+  <div class="page-container">
+    <header class="page-header">
+      <h1>RWA Voting</h1>
+      <p id="page-subtitle">Secure community voting made simple.</p>
+    </header>
+
+    <main class="card" id="view-container">
+      <div id="login-view" class="view active-view">
+        <h2>Request OTP</h2>
+        <p>Enter your registered email address to receive a one-time password.</p>
+        <form id="login-form" class="form-grid">
+          <label>
+            Email address
+            <input type="email" id="login-email" placeholder="you@example.com" required>
+          </label>
+          <button type="submit" class="btn-primary">Send OTP</button>
+        </form>
+        <p class="page-footer">Already have an OTP? After requesting one, enter it on the next screen.</p>
+      </div>
+
+      <div id="otp-view" class="view">
+        <h2>Verify OTP</h2>
+        <p id="otp-description">Check your inbox and enter the code sent to your email.</p>
+        <form id="otp-form" class="form-grid">
+          <label>
+            One-time password
+            <input type="text" id="otp-code" placeholder="123456" maxlength="6" required>
+          </label>
+          <button type="submit" class="btn-primary">Verify OTP</button>
+        </form>
+        <p class="page-footer"><a href="#login" id="otp-back">Back to login</a></p>
+      </div>
+
+      <div id="vote-view" class="view">
+        <h2>Cast Your Vote</h2>
+        <p id="vote-description">Choose a candidate for President.</p>
+        <div class="vote-grid">
+          <button class="btn-option" data-candidate="Candidate A">
+            <span>Candidate A</span>
+            <small>Community Leader</small>
+          </button>
+          <button class="btn-option" data-candidate="Candidate B">
+            <span>Candidate B</span>
+            <small>Community Organizer</small>
+          </button>
+        </div>
+        <p class="page-footer"><a href="#logout" id="vote-logout">Logout</a></p>
+      </div>
+
+      <div id="results-view" class="view">
+        <h2>Election Results</h2>
+        <p>Current voting totals from the live election.</p>
+        <div class="results-card">
+          <table class="results-table" id="results-table">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Votes</th>
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+          <p class="empty-state" id="results-empty">No voting results are available yet.</p>
+        </div>
+        <p class="page-footer">
+          <a href="#vote" id="results-back">Back to vote</a>
+          <a href="#logout" id="results-logout">Logout</a>
+        </p>
+      </div>
+    </main>
+
+    <div id="message" class="card" style="display: none; margin-top: 18px;"></div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
