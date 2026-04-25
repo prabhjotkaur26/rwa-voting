@@ -228,7 +228,6 @@ resource "aws_lambda_function" "download" {
     }
   }
 }
-
 ########################################
 # RESULTS LAMBDA
 ########################################
@@ -258,8 +257,8 @@ resource "aws_lambda_function" "results" {
   environment {
     variables = {
       VOTE_TABLE   = aws_dynamodb_table.votes.name
-      CONFIG_TABLE  = aws_dynamodb_table.election.name
-      JWT_SECRET    = "mysecret123"
+      CONFIG_TABLE = aws_dynamodb_table.election.name
+      JWT_SECRET   = "mysecret123"
     }
   }
 }
