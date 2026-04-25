@@ -228,7 +228,6 @@ resource "aws_lambda_function" "download" {
     }
   }
 }
-
 ########################################
 # RESULTS LAMBDA
 ########################################
@@ -254,6 +253,18 @@ resource "aws_lambda_function" "results" {
     aws_dynamodb_table.votes,
     aws_dynamodb_table.election
   ]
+
+  environment {
+    variables = {
+      VOTE_TABLE   = aws_dynamodb_table.votes.name
+      CONFIG_TABLE = aws_dynamodb_table.election.name
+      JWT_SECRET   = "mysecret123"
+    }
+  }
+}
+########################################
+# CSV IMPORT LAMBDA
+########################################
 data "archive_file" "csv_zip" {
   type        = "zip"
   source_file = "${path.module}/../lambdas/csv_import.py"
@@ -279,14 +290,6 @@ resource "aws_lambda_function" "csv_import" {
   environment {
     variables = {
       VOTER_TABLE = aws_dynamodb_table.voters.name
-    }
-  }
-}
-  environment {
-    variables = {
-      VOTE_TABLE   = aws_dynamodb_table.votes.name
-      CONFIG_TABLE  = aws_dynamodb_table.election.name
-      JWT_SECRET    = "mysecret123"
     }
   }
 }
