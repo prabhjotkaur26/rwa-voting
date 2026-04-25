@@ -39,31 +39,33 @@ def lambda_handler(event, context):
         reader = csv.DictReader(csv_data)
 
         count = 0
+# -----------------------------
+# INSERT INTO DYNAMODB
+# -----------------------------
+count = 0
 
-        # -----------------------------
-        # INSERT INTO DYNAMODB
-        # -----------------------------
-      with table.batch_writer() as batch:
+with table.batch_writer() as batch:
     for row in reader:
-        email = (row.get("email") or "").strip().lower()
+        try:
+            email = (row.get("email") or "").strip().lower()
 
-        if not email:
-            print(f"Skipping row (missing email): {row}")
-            continue
+            if not email:
+                print(f"Skipping row (missing email): {row}")
+                continue
 
-        item = {
-            "email": email,
-            "name": (row.get("name") or "").strip(),
-            "flatNumber": (row.get("flatNumber") or "").strip(),
-            "voterStatus": (row.get("voterStatus") or "ACTIVE").strip()
-        }
+            item = {
+                "email": email,
+                "name": (row.get("name") or "").strip(),
+                "flatNumber": (row.get("flatNumber") or "").strip(),
+                "voterStatus": (row.get("voterStatus") or "ACTIVE").strip()
+            }
 
-        batch.put_item(Item=item)
-        count += 1
-            except Exception as db_error:
-                print("DynamoDB insert failed for row:", row)
-                print(str(db_error))
+            batch.put_item(Item=item)
+            count += 1
 
+        except Exception as db_error:
+            print("DynamoDB insert failed for row:", row)
+            print(str(db_error))
         print(f"SUCCESS: Inserted {count} records")
 
         return {
