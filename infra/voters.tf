@@ -9,12 +9,6 @@ resource "aws_dynamodb_table" "voter_registry" {
     type = "S"
   }
 
-  # Optional attributes (not required for key schema, but useful logically)
-  attribute {
-    name = "is_active"
-    type = "N"
-  }
-
   # Enable encryption
   server_side_encryption {
     enabled = true
