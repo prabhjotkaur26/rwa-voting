@@ -60,7 +60,8 @@ source_code_hash = data.archive_file.csv_zip.output_base64sha256
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.lambda_basic
+    aws_iam_role_policy_attachment.lambda_basic,
+    aws_dynamodb_table.voters
   ]
 }
 
@@ -99,6 +100,8 @@ resource "aws_s3_object" "voters_csv" {
   key    = "voters.csv"
 
   source = "${path.module}/../voters.csv"
+
+  depends_on = [aws_s3_bucket_notification.bucket_notify]
 }
 
 ########################################
