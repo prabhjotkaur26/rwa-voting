@@ -4,11 +4,10 @@ import urllib.parse
 import os
 from io import StringIO
 
-# AWS clients
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.client('s3')
 
-table = dynamodb.Table(os.environ['voter_registry'])
+table = dynamodb.Table(os.environ['VOTER_TABLE'])
 
 
 def lambda_handler(event, context):
@@ -16,9 +15,6 @@ def lambda_handler(event, context):
     print("EVENT RECEIVED:", event)
 
     try:
-        # -----------------------------
-        # SAFE EVENT PARSING
-        # -----------------------------
         record = event['Records'][0]
 
         bucket = record['s3']['bucket']['name']
@@ -26,51 +22,43 @@ def lambda_handler(event, context):
 
         print(f"Bucket: {bucket}, Key: {key}")
 
-        # -----------------------------
-        # FETCH FILE
-        # -----------------------------
         file_obj = s3.get_object(Bucket=bucket, Key=key)
         body = file_obj['Body'].read().decode('utf-8')
 
-        # -----------------------------
-        # PARSE CSV
-        # -----------------------------
         csv_data = StringIO(body)
         reader = csv.DictReader(csv_data)
 
         count = 0
-# -----------------------------
-# INSERT INTO DYNAMODB
-# -----------------------------
-count = 0
 
-with table.batch_writer() as batch:
-    for row in reader:
-        try:
-            email = (row.get("email") or "").strip().lower()
+        # ✅ Correct placement
+        with table.batch_writer() as batch:
+            for row in reader:
+                try:
+                    email = (row.get("email") or "").strip().lower()
 
-            if not email:
-                print(f"Skipping row (missing email): {row}")
-                continue
+                    if not email:
+                        print(f"Skipping row: {row}")
+                        continue
 
-            item = {
-                "email": email,
-                "name": (row.get("name") or "").strip(),
-                "flatNumber": (row.get("flatNumber") or "").strip(),
-                "voterStatus": (row.get("voterStatus") or "ACTIVE").strip()
-            }
+                    item = {
+                        "email": email,
+                        "name": (row.get("name") or "").strip(),
+                        "flatNumber": (row.get("flatNumber") or "").strip(),
+                        "voterStatus": (row.get("voterStatus") or "ACTIVE").strip()
+                    }
 
-            batch.put_item(Item=item)
-            count += 1
+                    batch.put_item(Item=item)
+                    count += 1
 
-        except Exception as db_error:
-            print("DynamoDB insert failed for row:", row)
-            print(str(db_error))
+                except Exception as db_error:
+                    print("Insert failed:", row)
+                    print(str(db_error))
+
         print(f"SUCCESS: Inserted {count} records")
 
         return {
             "statusCode": 200,
-            "body": f"CSV processed successfully. Inserted {count} records."
+            "body": f"Inserted {count} records"
         }
 
     except Exception as e:
@@ -78,5 +66,5 @@ with table.batch_writer() as batch:
 
         return {
             "statusCode": 500,
-            "body": f"Error processing CSV: {str(e)}"
+            "body": str(e)
         }
