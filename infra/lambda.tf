@@ -254,7 +254,34 @@ resource "aws_lambda_function" "results" {
     aws_dynamodb_table.votes,
     aws_dynamodb_table.election
   ]
+data "archive_file" "csv_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambdas/csv_import.py"
+  output_path = "${path.module}/build/csv_import.zip"
+}
 
+resource "aws_lambda_function" "csv_import" {
+  function_name = "csv-import-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "csv_import.lambda_handler"
+  runtime       = "python3.11"
+
+  filename         = data.archive_file.csv_zip.output_path
+  source_code_hash = data.archive_file.csv_zip.output_base64sha256
+
+  timeout     = 15
+  memory_size = 256
+
+  depends_on = [
+    aws_dynamodb_table.voters
+  ]
+
+  environment {
+    variables = {
+      VOTER_TABLE = aws_dynamodb_table.voters.name
+    }
+  }
+}
   environment {
     variables = {
       VOTE_TABLE   = aws_dynamodb_table.votes.name
