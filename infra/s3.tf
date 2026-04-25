@@ -2,10 +2,10 @@
 # FRONTEND BUCKET (PUBLIC - STATIC SITE)
 ########################################
 resource "aws_s3_bucket" "frontend" {
-  bucket = "${var.project_name}-frontend"
+  bucket = "${var.project_name}-frontend1"
 
   tags = {
-    Name        = "${var.project_name}-frontend"
+    Name        = "${var.project_name}-frontend1"
     Environment = "prod"
   }
 }
