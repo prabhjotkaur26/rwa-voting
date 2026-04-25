@@ -8,7 +8,7 @@ from io import StringIO
 dynamodb = boto3.resource('dynamodb')
 s3 = boto3.client('s3')
 
-table = dynamodb.Table(os.environ['VOTER_TABLE'])
+table = dynamodb.Table(os.environ['voter_registry'])
 
 
 def lambda_handler(event, context):
