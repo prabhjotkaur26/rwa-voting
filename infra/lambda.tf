@@ -41,13 +41,13 @@ resource "aws_lambda_function" "auth" {
 
   depends_on = [
     aws_dynamodb_table.otp,
-    aws_dynamodb_table.voters
+    aws_dynamodb_table.voter_registry
   ]
 
   environment {
     variables = {
       OTP_TABLE    = aws_dynamodb_table.otp.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      VOTER_TABLE  = aws_dynamodb_table.voter_registry.name
       SENDER_EMAIL = "your-verified-email@example.com"
       JWT_SECRET   = local.jwt_secret
     }
@@ -110,13 +110,13 @@ resource "aws_lambda_function" "vote" {
 
   depends_on = [
     aws_dynamodb_table.votes,
-    aws_dynamodb_table.voters
+    aws_dynamodb_table.voter_registry
   ]
 
   environment {
     variables = {
       VOTES_TABLE  = aws_dynamodb_table.votes.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      VOTER_TABLE  = aws_dynamodb_table.voter_registry.name
       JWT_SECRET   = local.jwt_secret
     }
   }
@@ -145,14 +145,14 @@ resource "aws_lambda_function" "admin" {
 
   depends_on = [
     aws_dynamodb_table.votes,
-    aws_dynamodb_table.voters,
+    aws_dynamodb_table.voter_registry,
     aws_dynamodb_table.election
   ]
 
   environment {
     variables = {
       VOTE_TABLE   = aws_dynamodb_table.votes.name
-      VOTER_TABLE  = aws_dynamodb_table.voters.name
+      VOTER_TABLE  = aws_dynamodb_table.voter_registry.name
       CONFIG_TABLE = aws_dynamodb_table.election.name
       JWT_SECRET   = local.jwt_secret
     }

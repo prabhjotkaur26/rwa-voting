@@ -61,7 +61,7 @@ source_code_hash = data.archive_file.csv_zip.output_base64sha256
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_basic,
-    aws_dynamodb_table.voters
+    aws_dynamodb_table.voter_registry
   ]
 }
 

@@ -51,11 +51,11 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
           "dynamodb:Scan"
         ]
         Resource = [
-          aws_dynamodb_table.voters.arn,
+          aws_dynamodb_table.voter_registry.arn,
           aws_dynamodb_table.otp.arn,
           aws_dynamodb_table.votes.arn,
           aws_dynamodb_table.election.arn,
-          "${aws_dynamodb_table.voters.arn}/index/*",
+          "${aws_dynamodb_table.voter_registry.arn}/index/*",
           "${aws_dynamodb_table.votes.arn}/index/*"
         ]
       },
@@ -93,7 +93,7 @@ resource "aws_iam_role_policy" "lambda_custom_policy" {
 
   # ✅ ensure proper creation order
   depends_on = [
-    aws_dynamodb_table.voters,
+    aws_dynamodb_table.voter_registry,
     aws_dynamodb_table.otp,
     aws_dynamodb_table.votes,
     aws_dynamodb_table.election,

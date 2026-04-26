@@ -49,6 +49,10 @@ def lambda_handler(event, context):
         if "Item" not in res:
             return response(403, "Not a registered voter")
 
+        if not SENDER or SENDER == "your-verified-email@example.com":
+            print("ERROR: SENDER_EMAIL environment variable is not configured with a verified SES address")
+            return response(500, "Server email sender not configured. Set SENDER_EMAIL to a verified SES email.")
+
         # -----------------------------
         # Generate OTP
         # -----------------------------
@@ -92,20 +96,24 @@ def lambda_handler(event, context):
 
     except Exception as e:
         print("ERROR:", str(e))
-        return response(500, "Internal server error")
+        return response(500, "Internal server error", str(e))
 
 
 # -----------------------------
 # RESPONSE HELPER
 # -----------------------------
-def response(status, message):
+def response(status, message, error=None):
+    body = {
+        "message": message
+    }
+    if error:
+        body["error"] = error
+
     return {
         "statusCode": status,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*"
         },
-        "body": json.dumps({
-            "message": message
-        })
+        "body": json.dumps(body)
     }

@@ -1,23 +1,4 @@
 ############################################
-# VOTERS TABLE
-############################################
-resource "aws_dynamodb_table" "voters" {
-  name         = "voter-registry"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "email"
-
-  attribute {
-    name = "email"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "voter-registry"
-    Environment = "prod"
-  }
-}
-
-############################################
 # OTP TABLE
 ############################################
 resource "aws_dynamodb_table" "otp" {
