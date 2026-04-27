@@ -4,7 +4,7 @@ import urllib.parse
 import os
 from io import StringIO
 
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource('dynamodb', region_name='ap-south-1')
 s3 = boto3.client('s3')
 
 table = dynamodb.Table(os.environ['VOTER_TABLE'])

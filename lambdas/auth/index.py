@@ -7,8 +7,8 @@ import os
 # -----------------------------
 # AWS CLIENTS
 # -----------------------------
-dynamodb = boto3.resource("dynamodb")
-ses = boto3.client("ses")
+dynamodb = boto3.resource("dynamodb", region_name="ap-south-1")
+ses = boto3.client("ses", region_name="ap-south-1")
 
 otp_table = dynamodb.Table(os.environ["OTP_TABLE"])
 voter_table = dynamodb.Table(os.environ["VOTER_TABLE"])

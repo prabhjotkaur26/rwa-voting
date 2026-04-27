@@ -8,16 +8,44 @@ locals {
 # ########################################
 # # BUILD DIRECTORY CLEANUP (IMPORTANT)
 # ########################################
-# resource "null_resource" "clean_build" {
-#   triggers = {
-#     always_run = timestamp()
-#   }
+# BUILD DIRECTORY CLEANUP
+# ########################################
+resource "null_resource" "clean_build" {
+  triggers = {
+    always_run = timestamp()
+  }
 
-#   provisioner "local-exec" {
-#     command = "if exist build rmdir /s /q build && mkdir build"
-#     interpreter = ["cmd", "/c"]
-#   }
-# }
+  provisioner "local-exec" {
+    command = "if exist build rmdir /s /q build && mkdir build"
+    interpreter = ["cmd", "/c"]
+  }
+}
+
+########################################
+# AUTH LAMBDA BUILD
+########################################
+resource "null_resource" "auth_build" {
+  triggers = {
+    source_hash = filemd5("${path.module}/../lambdas/auth/index.py")
+    requirements_hash = filemd5("${path.module}/../lambdas/auth/requirements.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd ${path.module}/../lambdas/auth
+      if exist package rmdir /s /q package
+      mkdir package
+      pip install -r requirements.txt -t package
+      copy index.py package\
+      cd package
+      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/auth.zip -Force"
+    EOT
+    interpreter = ["cmd", "/c"]
+  }
+
+  depends_on = [null_resource.clean_build]
+}
+
 ########################################
 # AUTH LAMBDA
 ########################################
@@ -25,6 +53,8 @@ data "archive_file" "auth_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/auth"
   output_path = "${path.module}/build/auth.zip"
+
+  depends_on = [null_resource.auth_build]
 }
 
 resource "aws_lambda_function" "auth" {
@@ -48,10 +78,35 @@ resource "aws_lambda_function" "auth" {
     variables = {
       OTP_TABLE    = aws_dynamodb_table.otp.name
       VOTER_TABLE  = aws_dynamodb_table.voter_registry.name
-      SENDER_EMAIL = "your-verified-email@example.com"
+      SENDER_EMAIL = "prabh008968@gmail.com"
       JWT_SECRET   = local.jwt_secret
     }
   }
+}
+
+########################################
+# VERIFY LAMBDA BUILD
+########################################
+resource "null_resource" "verify_build" {
+  triggers = {
+    source_hash = filemd5("${path.module}/../lambdas/verify/index.py")
+    requirements_hash = filemd5("${path.module}/../lambdas/verify/requirements.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd ${path.module}/../lambdas/verify
+      if exist package rmdir /s /q package
+      mkdir package
+      pip install -r requirements.txt -t package
+      copy index.py package\
+      cd package
+      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/verify.zip -Force"
+    EOT
+    interpreter = ["cmd", "/c"]
+  }
+
+  depends_on = [null_resource.clean_build]
 }
 
 ########################################
@@ -61,6 +116,8 @@ data "archive_file" "verify_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/verify"
   output_path = "${path.module}/build/verify.zip"
+
+  depends_on = [null_resource.verify_build]
 }
 
 resource "aws_lambda_function" "verify" {
@@ -88,12 +145,40 @@ resource "aws_lambda_function" "verify" {
 }
 
 ########################################
+# VOTE LAMBDA BUILD
+########################################
+resource "null_resource" "vote_build" {
+  triggers = {
+    source_hash = filemd5("${path.module}/../lambdas/vote/index.py")
+    requirements_hash = filemd5("${path.module}/../lambdas/vote/requirements.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd ${path.module}/../lambdas/vote
+      if exist package rmdir /s /q package
+      mkdir package
+      pip install -r requirements.txt -t package
+      copy index.py package\
+      copy app.py package\
+      cd package
+      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/vote.zip -Force"
+    EOT
+    interpreter = ["cmd", "/c"]
+  }
+
+  depends_on = [null_resource.clean_build]
+}
+
+########################################
 # VOTE LAMBDA
 ########################################
 data "archive_file" "vote_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/vote"
   output_path = "${path.module}/build/vote.zip"
+
+  depends_on = [null_resource.vote_build]
 }
 
 resource "aws_lambda_function" "vote" {
@@ -123,12 +208,39 @@ resource "aws_lambda_function" "vote" {
 }
 
 ########################################
+# ADMIN LAMBDA BUILD
+########################################
+resource "null_resource" "admin_build" {
+  triggers = {
+    source_hash = filemd5("${path.module}/../lambdas/admin/index.py")
+    requirements_hash = filemd5("${path.module}/../lambdas/admin/requirements.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd ${path.module}/../lambdas/admin
+      if exist package rmdir /s /q package
+      mkdir package
+      pip install -r requirements.txt -t package
+      copy index.py package\
+      cd package
+      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/admin.zip -Force"
+    EOT
+    interpreter = ["cmd", "/c"]
+  }
+
+  depends_on = [null_resource.clean_build]
+}
+
+########################################
 # ADMIN LAMBDA
 ########################################
 data "archive_file" "admin_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/admin"
   output_path = "${path.module}/build/admin.zip"
+
+  depends_on = [null_resource.admin_build]
 }
 
 resource "aws_lambda_function" "admin" {
@@ -160,12 +272,39 @@ resource "aws_lambda_function" "admin" {
 }
 
 ########################################
+# EXPORT LAMBDA BUILD
+########################################
+resource "null_resource" "export_build" {
+  triggers = {
+    source_hash = filemd5("${path.module}/../lambdas/export/index.py")
+    requirements_hash = filemd5("${path.module}/../lambdas/export/requirements.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd ${path.module}/../lambdas/export
+      if exist package rmdir /s /q package
+      mkdir package
+      pip install -r requirements.txt -t package
+      copy index.py package\
+      cd package
+      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/export.zip -Force"
+    EOT
+    interpreter = ["cmd", "/c"]
+  }
+
+  depends_on = [null_resource.clean_build]
+}
+
+########################################
 # EXPORT LAMBDA
 ########################################
 data "archive_file" "export_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/export"
   output_path = "${path.module}/build/export.zip"
+
+  depends_on = [null_resource.export_build]
 }
 
 resource "aws_lambda_function" "export" {
@@ -197,13 +336,39 @@ resource "aws_lambda_function" "export" {
 }
 
 ########################################
+# DOWNLOAD LAMBDA BUILD
+########################################
+resource "null_resource" "download_build" {
+  triggers = {
+    source_hash = filemd5("${path.module}/../lambdas/download/download.py")
+    requirements_hash = filemd5("${path.module}/../lambdas/download/requirements.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd ${path.module}/../lambdas/download
+      if exist package rmdir /s /q package
+      mkdir package
+      pip install -r requirements.txt -t package
+      copy download.py package\
+      cd package
+      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/download.zip -Force"
+    EOT
+    interpreter = ["cmd", "/c"]
+  }
+
+  depends_on = [null_resource.clean_build]
+}
+
+########################################
 # DOWNLOAD LAMBDA
 ########################################
 data "archive_file" "download_zip" {
   type        = "zip"
-  source_file = "${path.module}/../lambdas/download/download.py"
+  source_dir  = "${path.module}/../lambdas/download"
   output_path = "${path.module}/build/download.zip"
 
+  depends_on = [null_resource.download_build]
 }
 
 resource "aws_lambda_function" "download" {
@@ -229,12 +394,39 @@ resource "aws_lambda_function" "download" {
   }
 }
 ########################################
+# RESULTS LAMBDA BUILD
+########################################
+resource "null_resource" "results_build" {
+  triggers = {
+    source_hash = filemd5("${path.module}/../lambdas/results/index.py")
+    requirements_hash = filemd5("${path.module}/../lambdas/results/requirements.txt")
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      cd ${path.module}/../lambdas/results
+      if exist package rmdir /s /q package
+      mkdir package
+      pip install -r requirements.txt -t package
+      copy index.py package\
+      cd package
+      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/results.zip -Force"
+    EOT
+    interpreter = ["cmd", "/c"]
+  }
+
+  depends_on = [null_resource.clean_build]
+}
+
+########################################
 # RESULTS LAMBDA
 ########################################
 data "archive_file" "results_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../lambdas/results"
   output_path = "${path.module}/build/results.zip"
+
+  depends_on = [null_resource.results_build]
 }
 
 resource "aws_lambda_function" "results" {
@@ -261,4 +453,60 @@ resource "aws_lambda_function" "results" {
       JWT_SECRET   = "mysecret123"
     }
   }
+}
+
+########################################
+# CSV IMPORT LAMBDA
+########################################
+data "archive_file" "csv_import_zip" {
+  type        = "zip"
+  source_file = "${path.module}/../lambdas/csv_import/index.py"
+  output_path = "${path.module}/build/csv_import.zip"
+}
+
+resource "aws_lambda_function" "csv_import" {
+  function_name = "csv-import-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.lambda_handler"
+  runtime       = "python3.11"
+
+  filename         = data.archive_file.csv_import_zip.output_path
+  source_code_hash = data.archive_file.csv_import_zip.output_base64sha256
+
+  timeout     = 30
+  memory_size = 256
+
+  depends_on = [
+    aws_dynamodb_table.voter_registry
+  ]
+
+  environment {
+    variables = {
+      VOTER_TABLE = aws_dynamodb_table.voter_registry.name
+    }
+  }
+}
+
+########################################
+# S3 TRIGGER FOR CSV IMPORT
+########################################
+resource "aws_lambda_permission" "allow_s3" {
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.csv_import.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = "arn:aws:s3:::voter-csv-upload-bucket-12345"
+}
+
+resource "aws_s3_bucket_notification" "csv_upload" {
+  bucket = "voter-csv-upload-bucket-12345"
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.csv_import.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = ""
+    filter_suffix       = ".csv"
+  }
+
+  depends_on = [aws_lambda_permission.allow_s3]
 }

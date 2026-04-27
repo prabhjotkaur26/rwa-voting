@@ -5,7 +5,7 @@ import time
 import os
 
 # AWS CLIENT
-dynamodb = boto3.resource("dynamodb")
+dynamodb = boto3.resource("dynamodb", region_name="ap-south-1")
 otp_table = dynamodb.Table(os.environ["OTP_TABLE"])
 
 SECRET = os.environ["JWT_SECRET"]
