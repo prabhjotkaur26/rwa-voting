@@ -16,8 +16,8 @@ resource "null_resource" "clean_build" {
   }
 
   provisioner "local-exec" {
-    command = "if exist build rmdir /s /q build && mkdir build"
-    interpreter = ["cmd", "/c"]
+    command = "if (Test-Path build) { Remove-Item -Recurse -Force build }; New-Item -ItemType Directory -Force build"
+    interpreter = ["powershell", "-Command"]
   }
 }
 
@@ -32,15 +32,15 @@ resource "null_resource" "auth_build" {
 
   provisioner "local-exec" {
     command = <<EOT
-      cd ${path.module}/../lambdas/auth
-      if exist package rmdir /s /q package
-      mkdir package
+      Set-Location ${path.module}/../lambdas/auth
+      if (Test-Path package) { Remove-Item -Recurse -Force package }
+      New-Item -ItemType Directory -Force package
       pip install -r requirements.txt -t package
-      copy index.py package\
-      cd package
-      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/auth.zip -Force"
+      Copy-Item index.py package\
+      Set-Location package
+      Compress-Archive -Path * -DestinationPath ../../infra/build/auth.zip -Force
     EOT
-    interpreter = ["cmd", "/c"]
+    interpreter = ["powershell", "-Command"]
   }
 
   depends_on = [null_resource.clean_build]
@@ -95,15 +95,15 @@ resource "null_resource" "verify_build" {
 
   provisioner "local-exec" {
     command = <<EOT
-      cd ${path.module}/../lambdas/verify
-      if exist package rmdir /s /q package
-      mkdir package
+      Set-Location ${path.module}/../lambdas/verify
+      if (Test-Path package) { Remove-Item -Recurse -Force package }
+      New-Item -ItemType Directory -Force package
       pip install -r requirements.txt -t package
-      copy index.py package\
-      cd package
-      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/verify.zip -Force"
+      Copy-Item index.py package\
+      Set-Location package
+      Compress-Archive -Path * -DestinationPath ../../infra/build/verify.zip -Force
     EOT
-    interpreter = ["cmd", "/c"]
+    interpreter = ["powershell", "-Command"]
   }
 
   depends_on = [null_resource.clean_build]
@@ -155,16 +155,16 @@ resource "null_resource" "vote_build" {
 
   provisioner "local-exec" {
     command = <<EOT
-      cd ${path.module}/../lambdas/vote
-      if exist package rmdir /s /q package
-      mkdir package
+      Set-Location ${path.module}/../lambdas/vote
+      if (Test-Path package) { Remove-Item -Recurse -Force package }
+      New-Item -ItemType Directory -Force package
       pip install -r requirements.txt -t package
-      copy index.py package\
-      copy app.py package\
-      cd package
-      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/vote.zip -Force"
+      Copy-Item index.py package\
+      Copy-Item app.py package\
+      Set-Location package
+      Compress-Archive -Path * -DestinationPath ../../infra/build/vote.zip -Force
     EOT
-    interpreter = ["cmd", "/c"]
+    interpreter = ["powershell", "-Command"]
   }
 
   depends_on = [null_resource.clean_build]
@@ -218,15 +218,15 @@ resource "null_resource" "admin_build" {
 
   provisioner "local-exec" {
     command = <<EOT
-      cd ${path.module}/../lambdas/admin
-      if exist package rmdir /s /q package
-      mkdir package
+      Set-Location ${path.module}/../lambdas/admin
+      if (Test-Path package) { Remove-Item -Recurse -Force package }
+      New-Item -ItemType Directory -Force package
       pip install -r requirements.txt -t package
-      copy index.py package\
-      cd package
-      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/admin.zip -Force"
+      Copy-Item index.py package\
+      Set-Location package
+      Compress-Archive -Path * -DestinationPath ../../infra/build/admin.zip -Force
     EOT
-    interpreter = ["cmd", "/c"]
+    interpreter = ["powershell", "-Command"]
   }
 
   depends_on = [null_resource.clean_build]
@@ -282,15 +282,15 @@ resource "null_resource" "export_build" {
 
   provisioner "local-exec" {
     command = <<EOT
-      cd ${path.module}/../lambdas/export
-      if exist package rmdir /s /q package
-      mkdir package
+      Set-Location ${path.module}/../lambdas/export
+      if (Test-Path package) { Remove-Item -Recurse -Force package }
+      New-Item -ItemType Directory -Force package
       pip install -r requirements.txt -t package
-      copy index.py package\
-      cd package
-      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/export.zip -Force"
+      Copy-Item index.py package\
+      Set-Location package
+      Compress-Archive -Path * -DestinationPath ../../infra/build/export.zip -Force
     EOT
-    interpreter = ["cmd", "/c"]
+    interpreter = ["powershell", "-Command"]
   }
 
   depends_on = [null_resource.clean_build]
@@ -346,15 +346,15 @@ resource "null_resource" "download_build" {
 
   provisioner "local-exec" {
     command = <<EOT
-      cd ${path.module}/../lambdas/download
-      if exist package rmdir /s /q package
-      mkdir package
+      Set-Location ${path.module}/../lambdas/download
+      if (Test-Path package) { Remove-Item -Recurse -Force package }
+      New-Item -ItemType Directory -Force package
       pip install -r requirements.txt -t package
-      copy download.py package\
-      cd package
-      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/download.zip -Force"
+      Copy-Item download.py package\
+      Set-Location package
+      Compress-Archive -Path * -DestinationPath ../../infra/build/download.zip -Force
     EOT
-    interpreter = ["cmd", "/c"]
+    interpreter = ["powershell", "-Command"]
   }
 
   depends_on = [null_resource.clean_build]
@@ -404,15 +404,15 @@ resource "null_resource" "results_build" {
 
   provisioner "local-exec" {
     command = <<EOT
-      cd ${path.module}/../lambdas/results
-      if exist package rmdir /s /q package
-      mkdir package
+      Set-Location ${path.module}/../lambdas/results
+      if (Test-Path package) { Remove-Item -Recurse -Force package }
+      New-Item -ItemType Directory -Force package
       pip install -r requirements.txt -t package
-      copy index.py package\
-      cd package
-      powershell "Compress-Archive -Path * -DestinationPath ../../infra/build/results.zip -Force"
+      Copy-Item index.py package\
+      Set-Location package
+      Compress-Archive -Path * -DestinationPath ../../infra/build/results.zip -Force
     EOT
-    interpreter = ["cmd", "/c"]
+    interpreter = ["powershell", "-Command"]
   }
 
   depends_on = [null_resource.clean_build]
@@ -495,11 +495,11 @@ resource "aws_lambda_permission" "allow_s3" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.csv_import.function_name
   principal     = "s3.amazonaws.com"
-  source_arn    = "arn:aws:s3:::voter-csv-upload-bucket-12345"
+  source_arn    = aws_s3_bucket.csv_bucket1.arn
 }
 
 resource "aws_s3_bucket_notification" "csv_upload" {
-  bucket = "voter-csv-upload-bucket-12345"
+  bucket = aws_s3_bucket.csv_bucket1.bucket
 
   lambda_function {
     lambda_function_arn = aws_lambda_function.csv_import.arn

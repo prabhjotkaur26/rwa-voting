@@ -143,34 +143,3 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "images_enc" {
     }
   }
 }
-
-########################################
-# CSV UPLOAD BUCKET
-########################################
-resource "aws_s3_bucket" "csv_bucket" {
-  bucket        = "voter-csv-upload-bucket-12345"
-  force_destroy = false
-
-  tags = {
-    Name        = "voter-csv-upload-bucket"
-    Environment = "prod"
-  }
-}
-
-resource "aws_s3_bucket_versioning" "csv_versioning" {
-  bucket = aws_s3_bucket.csv_bucket.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "csv_enc" {
-  bucket = aws_s3_bucket.csv_bucket.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
