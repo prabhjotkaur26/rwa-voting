@@ -64,20 +64,6 @@ source_code_hash = data.archive_file.csv_zip.output_base64sha256
     aws_dynamodb_table.voter_registry
   ]
 }
-
-
-########################################
-# LAMBDA PERMISSION
-########################################
-resource "aws_lambda_permission" "allow_s3" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.csv_lambda.function_name
-  principal     = "s3.amazonaws.com"
-
-  source_arn = aws_s3_bucket.csv_bucket1.arn
-}
-
 ########################################
 # S3 TRIGGER
 ########################################
