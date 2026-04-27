@@ -156,15 +156,6 @@ resource "aws_s3_bucket" "csv_bucket" {
     Environment = "prod"
   }
 }
-
-resource "aws_s3_bucket_versioning" "csv_versioning" {
-  bucket = aws_s3_bucket.csv_bucket.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
 resource "aws_s3_bucket_server_side_encryption_configuration" "csv_enc" {
   bucket = aws_s3_bucket.csv_bucket.id
 
