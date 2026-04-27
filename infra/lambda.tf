@@ -93,7 +93,7 @@ data "archive_file" "vote_zip" {
 }
 
 resource "aws_lambda_function" "vote" {
-  function_name = "vote-function"
+  function_name = "rwa-voting-vote"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
@@ -233,7 +233,7 @@ data "archive_file" "results_zip" {
 }
 
 resource "aws_lambda_function" "results" {
-  function_name = "results-function"
+  function_name = "getResults"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.lambda_handler"
   runtime       = "python3.11"

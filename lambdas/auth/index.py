@@ -49,8 +49,8 @@ def lambda_handler(event, context):
         if "Item" not in res:
             return response(403, "Not a registered voter")
 
-        if not SENDER or SENDER == "your-verified-email@example.com":
-            print("ERROR: SENDER_EMAIL environment variable is not configured with a verified SES address")
+        if not SENDER:
+            print("ERROR: SENDER_EMAIL environment variable is not configured")
             return response(500, "Server email sender not configured. Set SENDER_EMAIL to a verified SES email.")
 
         # -----------------------------

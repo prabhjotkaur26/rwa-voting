@@ -44,15 +44,48 @@ resource "aws_apigatewayv2_integration" "lambda" {
 }
 
 ########################################
-# ROUTES (IMPORTANT FIX)
+# ROUTES (STATIC DEFINITIONS)
 ########################################
-resource "aws_apigatewayv2_route" "routes" {
-  for_each = aws_apigatewayv2_integration.lambda
-
+resource "aws_apigatewayv2_route" "send_otp" {
   api_id    = aws_apigatewayv2_api.api.id
-  route_key = each.key == "results" ? "ANY /results" : "POST /${each.key}"
+  route_key = "POST /send-otp"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["send-otp"].id}"
+}
 
-  target = "integrations/${each.value.id}"
+resource "aws_apigatewayv2_route" "verify_otp" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /verify-otp"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["verify-otp"].id}"
+}
+
+resource "aws_apigatewayv2_route" "vote" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /vote"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["vote"].id}"
+}
+
+resource "aws_apigatewayv2_route" "results" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "ANY /results"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["results"].id}"
+}
+
+resource "aws_apigatewayv2_route" "admin" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /admin"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["admin"].id}"
+}
+
+resource "aws_apigatewayv2_route" "export" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /export"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["export"].id}"
+}
+
+resource "aws_apigatewayv2_route" "download" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "GET /download"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda["download"].id}"
 }
 
 ########################################

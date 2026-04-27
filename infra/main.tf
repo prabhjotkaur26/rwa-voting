@@ -42,7 +42,7 @@ data "archive_file" "csv_zip" {
 }
 
 resource "aws_lambda_function" "csv_lambda" {
-  function_name = "csv_to_dynamodb"
+  function_name = "csv-import-function"
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.lambda_handler"
   runtime       = "python3.11"
