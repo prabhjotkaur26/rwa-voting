@@ -4,6 +4,10 @@
 *.tfstate.*
 .terraform.lock.hcl
 
+# Build artifacts
+infra/build/
+*.zip
+
 # Python
 __pycache__/
 *.py[cod]
