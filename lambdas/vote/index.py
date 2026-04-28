@@ -5,10 +5,14 @@ import os
 from datetime import datetime
 
 # AWS CLIENTS
-dynamodb = boto3.resource("dynamodb")
+dynamodb = boto3.resource("dynamodb", region_name="ap-south-1")
 votes_table = dynamodb.Table(os.environ["VOTES_TABLE"])
 
 SECRET = os.environ["JWT_SECRET"]
+
+print("VOTES_TABLE:", os.environ.get("VOTES_TABLE"))
+print("JWT_SECRET:", os.environ.get("JWT_SECRET"))
+print("Table name:", votes_table.table_name)
 
 def lambda_handler(event, context):
     try:
@@ -26,6 +30,7 @@ def lambda_handler(event, context):
         try:
             payload = jwt.decode(token, SECRET, algorithms=["HS256"])
             email = payload["email"]
+            print("Decoded email from JWT:", email)
         except jwt.ExpiredSignatureError:
             return response(401, {"message": "Token expired"})
         except jwt.InvalidTokenError:
@@ -44,11 +49,14 @@ def lambda_handler(event, context):
         electionId = body.get("electionId")
         votes = body.get("votes")
 
+        print("Body email:", email, "electionId:", electionId, "votes:", votes)
+
         if not email or not electionId or not votes:
             return response(400, {"message": "email, electionId, and votes are required"})
 
         # Submit votes
         for post, candidate in votes.items():
+            print("Putting vote for post:", post, "candidate:", candidate)
             votes_table.put_item(
                 Item={
                     "PK": f"{electionId}#{post}",

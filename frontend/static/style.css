@@ -197,3 +197,24 @@ button,
     padding: 22px 16px 36px;
   }
 }
+
+#message {
+  display: none;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+#message.message-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+#message.message-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}

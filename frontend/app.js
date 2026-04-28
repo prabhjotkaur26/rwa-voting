@@ -14,12 +14,13 @@ function setMessage(text, type = "info") {
   if (!text) {
     messageBox.style.display = "none";
     messageBox.textContent = "";
+    messageBox.className = "";
     return;
   }
 
   messageBox.style.display = "block";
   messageBox.textContent = text;
-  messageBox.style.color = type === "error" ? "#b91c1c" : "#0f172a";
+  messageBox.className = type === "error" ? "message-error" : "message-info";
 }
 
 function showView(view) {

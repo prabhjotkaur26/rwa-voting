@@ -44,7 +44,7 @@ resource "aws_lambda_function" "auth" {
     variables = {
       OTP_TABLE    = aws_dynamodb_table.otp.name
       VOTER_TABLE  = aws_dynamodb_table.voter_registry.name
-      SENDER_EMAIL = "prabh008968@gmail.com"
+      SENDER_EMAIL = "kaurprabhsidhu852004@gmail.com"
       JWT_SECRET   = local.jwt_secret
     }
   }

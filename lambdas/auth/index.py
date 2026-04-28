@@ -75,22 +75,26 @@ def lambda_handler(event, context):
         # -----------------------------
         # Send OTP via SES
         # -----------------------------
-        ses.send_email(
-            Source=SENDER,
-            Destination={
-                "ToAddresses": [email]
-            },
-            Message={
-                "Subject": {
-                    "Data": "RWA Voting OTP Verification"
+        try:
+            ses.send_email(
+                Source=SENDER,
+                Destination={
+                    "ToAddresses": [email]
                 },
-                "Body": {
-                    "Text": {
-                        "Data": f"Your OTP is {otp}. Valid for 5 minutes. Do not share it."
+                Message={
+                    "Subject": {
+                        "Data": "RWA Voting OTP Verification"
+                    },
+                    "Body": {
+                        "Text": {
+                            "Data": f"Your OTP is {otp}. Valid for 5 minutes. Do not share it."
+                        }
                     }
                 }
-            }
-        )
+            )
+        except Exception as e:
+            print("SES ERROR:", str(e))
+            return response(500, "Failed to send OTP via SES. Verify sender and recipient emails.", str(e))
 
         return response(200, "OTP sent successfully")
 
