@@ -79,7 +79,7 @@ def lambda_handler(event, context):
             ses.send_email(
                 Source=SENDER,
                 Destination={
-                    "ToAddresses": [emails]
+                    "ToAddresses": [email]
                 },
                 Message={
                     "Subject": {
