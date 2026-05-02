@@ -80,7 +80,11 @@ async function getApi(path, token) {
 async function handleLogin(event) {
   event.preventDefault();
 
+  sessionStorage.clear(); // 🔥 add this
+
   const email = document.getElementById("login-email").value.trim();
+  console.log("Sending email:", email); // 🔥 add this
+
   if (!email) {
     setMessage("Please enter your registered email.", "error");
     return;
