@@ -10,15 +10,13 @@ votes_table = dynamodb.Table(os.environ["VOTES_TABLE"])
 
 SECRET = os.environ["JWT_SECRET"]
 
-print("VOTES_TABLE:", os.environ.get("VOTES_TABLE"))
-print("JWT_SECRET:", os.environ.get("JWT_SECRET"))
-print("Table name:", votes_table.table_name)
-
 def lambda_handler(event, context):
     try:
         print("EVENT:", event)
 
-        # AUTH CHECK
+        # -----------------------------
+        # AUTH CHECK (JWT)
+        # -----------------------------
         headers = event.get("headers") or {}
         auth = headers.get("Authorization") or headers.get("authorization")
 
@@ -29,14 +27,16 @@ def lambda_handler(event, context):
 
         try:
             payload = jwt.decode(token, SECRET, algorithms=["HS256"])
-            email = payload["email"]
-            print("Decoded email from JWT:", email)
+            email = payload["email"]  # ✅ ONLY TRUST THIS
+            print("JWT email:", email)
         except jwt.ExpiredSignatureError:
             return response(401, {"message": "Token expired"})
         except jwt.InvalidTokenError:
             return response(401, {"message": "Invalid token"})
 
-        # Parse request body
+        # -----------------------------
+        # PARSE BODY
+        # -----------------------------
         body = event.get("body")
 
         if not body:
@@ -45,26 +45,37 @@ def lambda_handler(event, context):
         if isinstance(body, str):
             body = json.loads(body)
 
-        email = body.get("email")
         electionId = body.get("electionId")
         votes = body.get("votes")
 
-        print("Body email:", email, "electionId:", electionId, "votes:", votes)
+        if not electionId or not votes:
+            return response(400, {"message": "electionId and votes are required"})
 
-        if not email or not electionId or not votes:
-            return response(400, {"message": "email, electionId, and votes are required"})
+        print("Votes received:", votes)
 
-        # Submit votes
-        for post, candidate in votes.items():
-            print("Putting vote for post:", post, "candidate:", candidate)
-            votes_table.put_item(
-                Item={
-                    "PK": f"{electionId}#{post}",
-                    "SK": email,
-                    "candidateId": candidate,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
-            )
+        # -----------------------------
+        # HANDLE VOTING (MULTI MEMBERS)
+        # -----------------------------
+        for post, candidates in votes.items():
+
+            # If single value → convert to list
+            if isinstance(candidates, str):
+                candidates = [candidates]
+
+            # If not list → error
+            if not isinstance(candidates, list):
+                return response(400, {"message": f"Invalid format for {post}"})
+
+            for candidate in candidates:
+                votes_table.put_item(
+                    Item={
+                        "PK": f"{electionId}#{post}",
+                        "SK": f"{email}#{candidate}",  # ✅ prevents overwrite
+                        "email": email,
+                        "candidateId": candidate,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                )
 
         return response(200, {"message": "Vote submitted successfully"})
 
@@ -73,6 +84,9 @@ def lambda_handler(event, context):
         return response(500, {"message": "Internal server error"})
 
 
+# -----------------------------
+# RESPONSE HELPER
+# -----------------------------
 def response(status, body):
     return {
         "statusCode": status,
