@@ -13,7 +13,7 @@ ses = boto3.client("ses", region_name="ap-south-1")
 otp_table = dynamodb.Table(os.environ["OTP_TABLE"])
 voter_table = dynamodb.Table(os.environ["VOTER_TABLE"])
 
-SENDER = os.environ["SENDER_EMAIL"]
+SENDER = os.environ.get("SENDER_EMAIL")
 
 
 # -----------------------------
@@ -40,6 +40,7 @@ def lambda_handler(event, context):
             return response(400, "Email is required")
 
         email = email.strip().lower()
+        print("Requested email:", email)
 
         # -----------------------------
         # Check voter exists
@@ -47,17 +48,25 @@ def lambda_handler(event, context):
         res = voter_table.get_item(Key={"email": email})
 
         if "Item" not in res:
+            print("Email not found in voter table")
             return response(403, "Not a registered voter")
 
+        # -----------------------------
+        # Validate sender email
+        # -----------------------------
         if not SENDER:
-            print("ERROR: SENDER_EMAIL environment variable is not configured")
-            return response(500, "Server email sender not configured. Set SENDER_EMAIL to a verified SES email.")
+            print("ERROR: SENDER_EMAIL not set")
+            return response(500, "Server email sender not configured")
+
+        print("Sender email:", SENDER)
 
         # -----------------------------
         # Generate OTP
         # -----------------------------
         otp = str(random.randint(100000, 999999))
         expiry = int(time.time()) + 300  # 5 minutes
+
+        print("Generated OTP:", otp)
 
         # -----------------------------
         # Store OTP in DynamoDB
@@ -68,15 +77,16 @@ def lambda_handler(event, context):
                 "otp": otp,
                 "expiry": expiry,
                 "used": False
-                # NOTE: TTL attribute should be 'expiry' in DynamoDB table
             }
         )
+
+        print("OTP stored in DB")
 
         # -----------------------------
         # Send OTP via SES
         # -----------------------------
         try:
-            ses.send_email(
+            response_ses = ses.send_email(
                 Source=SENDER,
                 Destination={
                     "ToAddresses": [email]
@@ -87,14 +97,21 @@ def lambda_handler(event, context):
                     },
                     "Body": {
                         "Text": {
-                            "Data": f"Your OTP is {otp}. Valid for 5 minutes. Do not share it."
+                            "Data": f"Your OTP is {otp}. Valid for 5 minutes."
                         }
                     }
                 }
             )
+
+            print("SES Response:", response_ses)
+
         except Exception as e:
             print("SES ERROR:", str(e))
-            return response(500, "Failed to send OTP via SES. Verify sender and recipient emails.", str(e))
+            return response(
+                500,
+                "Failed to send OTP",
+                "Check if email is verified in SES (sandbox mode)"
+            )
 
         return response(200, "OTP sent successfully")
 
