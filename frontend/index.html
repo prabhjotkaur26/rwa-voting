@@ -14,6 +14,8 @@
     </header>
 
     <main class="card" id="view-container">
+
+      <!-- LOGIN -->
       <div id="login-view" class="view active-view">
         <h2>Request OTP</h2>
         <p>Enter your registered email address to receive a one-time password.</p>
@@ -24,12 +26,12 @@
           </label>
           <button type="submit" class="btn-primary">Send OTP</button>
         </form>
-        <p class="page-footer">Already have an OTP? After requesting one, enter it on the next screen.</p>
       </div>
 
+      <!-- OTP -->
       <div id="otp-view" class="view">
         <h2>Verify OTP</h2>
-        <p id="otp-description">Check your inbox and enter the code sent to your email.</p>
+        <p id="otp-description">Enter the OTP sent to your email.</p>
         <form id="otp-form" class="form-grid">
           <label>
             One-time password
@@ -37,48 +39,56 @@
           </label>
           <button type="submit" class="btn-primary">Verify OTP</button>
         </form>
-        <p class="page-footer"><a href="#login" id="otp-back">Back to login</a></p>
+        <p><a href="#" id="otp-back">Back</a></p>
       </div>
 
+      <!-- VOTING (UPDATED 🔥) -->
       <div id="vote-view" class="view">
-        <h2>Cast Your Vote</h2>
-        <p id="vote-description">Choose a candidate for President.</p>
-        <div class="vote-grid">
-          <button class="btn-option" data-candidate="Candidate A">
-            <span>Candidate A</span>
-            <small>Community Leader</small>
-          </button>
-          <button class="btn-option" data-candidate="Candidate B">
-            <span>Candidate B</span>
-            <small>Community Organizer</small>
-          </button>
-        </div>
-        <p class="page-footer"><a href="#logout" id="vote-logout">Logout</a></p>
+        <h2>Select Committee Members</h2>
+        <p id="vote-description">Select exactly 7 members for your community.</p>
+
+        <form id="vote-form" class="vote-grid">
+          <label><input type="checkbox" value="Member 1"> President</label>
+          <label><input type="checkbox" value="Member 2"> Vice President</label>
+          <label><input type="checkbox" value="Member 3"> Secretary</label>
+          <label><input type="checkbox" value="Member 4"> Treasurer</label>
+          <label><input type="checkbox" value="Member 5"> Member 5</label>
+          <label><input type="checkbox" value="Member 6"> Member 6</label>
+          <label><input type="checkbox" value="Member 7"> Member 7</label>
+          <label><input type="checkbox" value="Member 8"> Member 8</label>
+          <label><input type="checkbox" value="Member 9"> Member 9</label>
+        </form>
+
+        <button id="submit-vote" class="btn-primary">Submit Vote</button>
+
+        <p><a href="#" id="vote-logout">Logout</a></p>
       </div>
 
+      <!-- RESULTS -->
       <div id="results-view" class="view">
         <h2>Election Results</h2>
-        <p>Current voting totals from the live election.</p>
         <div class="results-card">
-          <table class="results-table" id="results-table">
+          <table class="results-table">
             <thead>
               <tr>
-                <th>Option</th>
+                <th>Member</th>
                 <th>Votes</th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
           </table>
-          <p class="empty-state" id="results-empty">No voting results are available yet.</p>
+          <p id="results-empty">No results yet.</p>
         </div>
-        <p class="page-footer">
-          <a href="#vote" id="results-back">Back to vote</a>
-          <a href="#logout" id="results-logout">Logout</a>
+
+        <p>
+          <a href="#" id="results-back">Back</a>
+          <a href="#" id="results-logout">Logout</a>
         </p>
       </div>
+
     </main>
 
-    <div id="message" class="card" style="display: none; margin-top: 18px;"></div>
+    <div id="message" class="card" style="display:none;"></div>
   </div>
 
   <script src="./config.js"></script>
