@@ -4,95 +4,62 @@ import jwt
 import os
 from datetime import datetime
 
-# AWS CLIENTS
 dynamodb = boto3.resource("dynamodb", region_name="ap-south-1")
 votes_table = dynamodb.Table(os.environ["VOTES_TABLE"])
 
 SECRET = os.environ["JWT_SECRET"]
 
+
 def lambda_handler(event, context):
     try:
-        print("EVENT:", event)
-
-        # -----------------------------
-        # AUTH CHECK (JWT)
-        # -----------------------------
         headers = event.get("headers") or {}
         auth = headers.get("Authorization") or headers.get("authorization")
 
         if not auth or not auth.startswith("Bearer "):
-            return response(401, {"message": "Unauthorized"})
+            return response(401, "Unauthorized")
 
         token = auth.split(" ")[1]
+        payload = jwt.decode(token, SECRET, algorithms=["HS256"])
+        email = payload["email"]
 
-        try:
-            payload = jwt.decode(token, SECRET, algorithms=["HS256"])
-            email = payload["email"]  # ✅ ONLY TRUST THIS
-            print("JWT email:", email)
-        except jwt.ExpiredSignatureError:
-            return response(401, {"message": "Token expired"})
-        except jwt.InvalidTokenError:
-            return response(401, {"message": "Invalid token"})
-
-        # -----------------------------
-        # PARSE BODY
-        # -----------------------------
-        body = event.get("body")
-
-        if not body:
-            return response(400, {"message": "Request body is required"})
-
-        if isinstance(body, str):
-            body = json.loads(body)
+        body = json.loads(event.get("body", "{}"))
 
         electionId = body.get("electionId")
         votes = body.get("votes")
 
         if not electionId or not votes:
-            return response(400, {"message": "electionId and votes are required"})
+            return response(400, "Missing data")
 
-        print("Votes received:", votes)
+        # MULTI MEMBERS
+        committee = votes.get("committee")
 
-        # -----------------------------
-        # HANDLE VOTING (MULTI MEMBERS)
-        # -----------------------------
-        for post, candidates in votes.items():
+        if not isinstance(committee, list):
+            return response(400, "Invalid format")
 
-            # If single value → convert to list
-            if isinstance(candidates, str):
-                candidates = [candidates]
+        for member in committee:
+            votes_table.put_item(
+                Item={
+                    "PK": f"{electionId}#committee",
+                    "SK": f"{email}#{member}",
+                    "candidateId": member,
+                    "email": email,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
 
-            # If not list → error
-            if not isinstance(candidates, list):
-                return response(400, {"message": f"Invalid format for {post}"})
-
-            for candidate in candidates:
-                votes_table.put_item(
-                    Item={
-                        "PK": f"{electionId}#{post}",
-                        "SK": f"{email}#{candidate}",  # ✅ prevents overwrite
-                        "email": email,
-                        "candidateId": candidate,
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
-                )
-
-        return response(200, {"message": "Vote submitted successfully"})
+        return response(200, "Vote saved")
 
     except Exception as e:
-        print("ERROR:", str(e))
-        return response(500, {"message": "Internal server error"})
+        print(e)
+        return response(500, "Server error")
 
 
-# -----------------------------
-# RESPONSE HELPER
-# -----------------------------
-def response(status, body):
+def response(status, message):
     return {
         "statusCode": status,
         "headers": {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*"
         },
-        "body": json.dumps(body)
+        "body": json.dumps({"message": message})
     }
