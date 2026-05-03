@@ -77,13 +77,14 @@ async function getApi(path, token) {
   return { status: response.status, body };
 }
 
+// ✅ LOGIN
 async function handleLogin(event) {
   event.preventDefault();
 
-  sessionStorage.clear(); // 🔥 add this
+  sessionStorage.clear();
 
   const email = document.getElementById("login-email").value.trim();
-  console.log("Sending email:", email); // 🔥 add this
+  console.log("Sending email:", email);
 
   if (!email) {
     setMessage("Please enter your registered email.", "error");
@@ -92,11 +93,12 @@ async function handleLogin(event) {
 
   try {
     const { status, body } = await postApi("/send-otp", { email });
+
     if (status === 200) {
       sessionStorage.setItem("rwaEmail", email);
       otpDescription.textContent = `We sent an OTP to ${email}. Enter it below.`;
       showView(otpView);
-      setMessage("OTP sent successfully. Check your inbox.");
+      setMessage("OTP sent successfully.");
     } else {
       setMessage(body.message || "Unable to send OTP.", "error");
     }
@@ -105,6 +107,7 @@ async function handleLogin(event) {
   }
 }
 
+// ✅ OTP VERIFY
 async function handleOtp(event) {
   event.preventDefault();
 
@@ -118,11 +121,12 @@ async function handleOtp(event) {
 
   try {
     const { status, body } = await postApi("/verify-otp", { email, otp });
+
     if (status === 200 && body.token) {
       sessionStorage.setItem("rwaToken", body.token);
-      voteDescription.textContent = `Logged in as ${email}. Choose a candidate for President.`;
+      voteDescription.textContent = `Logged in as ${email}. Select committee members.`;
       showView(voteView);
-      setMessage("OTP verified. You can now cast your vote.");
+      setMessage("OTP verified.");
     } else {
       setMessage(body.message || "OTP verification failed.", "error");
     }
@@ -131,13 +135,19 @@ async function handleOtp(event) {
   }
 }
 
+// ✅ MULTI-MEMBER VOTING (9 MEMBERS)
 async function handleVote(event) {
-  const candidate = event.currentTarget.dataset.candidate;
+  event.preventDefault();
+
   const email = getStoredEmail();
   const token = getStoredToken();
 
-  if (!candidate || !email || !token) {
-    setMessage("You must log in before voting.", "error");
+  const selected = [];
+  document.querySelectorAll('#vote-form input[type="checkbox"]:checked')
+    .forEach(cb => selected.push(cb.value));
+
+  if (selected.length === 0) {
+    setMessage("Please select at least one member.", "error");
     return;
   }
 
@@ -145,39 +155,48 @@ async function handleVote(event) {
     const votePayload = {
       email,
       electionId: "election1",
-      votes: { president: candidate }
+      votes: {
+        committee: selected
+      }
     };
+
     const { status, body } = await postApi("/vote", votePayload, token);
+
     if (status === 200) {
       await loadResults();
       showView(resultsView);
       setMessage("Vote submitted successfully.");
     } else {
-      setMessage(body.message || "Unable to submit vote.", "error");
+      setMessage(body.message || "Vote failed.", "error");
     }
   } catch (error) {
     setMessage(`Network error: ${error.message}`, "error");
   }
 }
 
+// ✅ RESULTS
 async function loadResults() {
   const token = getStoredToken();
 
   if (!token) {
-    setMessage("You must be logged in to view results.", "error");
+    setMessage("Login required.", "error");
     return;
   }
 
   const { status, body } = await getApi("/results", token);
+
   if (status === 200) {
     resultsBody.innerHTML = "";
+
     const entries = Object.entries(body || {});
+
     if (entries.length === 0) {
       resultsEmpty.style.display = "block";
       return;
     }
 
     resultsEmpty.style.display = "none";
+
     entries.forEach(([key, value]) => {
       const row = document.createElement("tr");
       row.innerHTML = `<td>${key}</td><td>${value}</td>`;
@@ -188,38 +207,45 @@ async function loadResults() {
   }
 }
 
+// ✅ LOGOUT
 function logout() {
   clearSession();
   showView(loginView);
-  setMessage("You have been logged out.");
+  setMessage("Logged out.");
 }
 
+// ✅ INIT
 function init() {
   loginForm.addEventListener("submit", handleLogin);
   otpForm.addEventListener("submit", handleOtp);
-  document.querySelectorAll(".btn-option").forEach((btn) => {
-    btn.addEventListener("click", handleVote);
-  });
-  document.getElementById("otp-back").addEventListener("click", (event) => {
-    event.preventDefault();
+
+  // 🔥 NEW submit button
+  document.getElementById("submit-vote").addEventListener("click", handleVote);
+
+  document.getElementById("otp-back").addEventListener("click", (e) => {
+    e.preventDefault();
     showView(loginView);
   });
-  document.getElementById("vote-logout").addEventListener("click", (event) => {
-    event.preventDefault();
+
+  document.getElementById("vote-logout").addEventListener("click", (e) => {
+    e.preventDefault();
     logout();
   });
-  document.getElementById("results-back").addEventListener("click", (event) => {
-    event.preventDefault();
+
+  document.getElementById("results-back").addEventListener("click", (e) => {
+    e.preventDefault();
     showView(voteView);
   });
-  document.getElementById("results-logout").addEventListener("click", (event) => {
-    event.preventDefault();
+
+  document.getElementById("results-logout").addEventListener("click", (e) => {
+    e.preventDefault();
     logout();
   });
 
   const token = getStoredToken();
+
   if (token) {
-    voteDescription.textContent = `Logged in as ${getStoredEmail()}. Choose a candidate for President.`;
+    voteDescription.textContent = `Logged in as ${getStoredEmail()}. Select committee members.`;
     showView(voteView);
   } else {
     showView(loginView);
