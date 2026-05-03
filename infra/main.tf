@@ -123,7 +123,8 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
   }
 }
 
-#resource "aws_s3_bucket_public_access_block" "frontend" {
+# ✅ FIXED: properly declared resource
+resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
   block_public_acls       = false
@@ -131,6 +132,7 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
   ignore_public_acls      = false
   restrict_public_buckets = false
 }
+
 resource "aws_s3_bucket_policy" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
