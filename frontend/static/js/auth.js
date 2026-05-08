@@ -2,11 +2,6 @@ async function sendOTP() {
 
   const email = document.getElementById("email").value;
 
-  if (!email) {
-    alert("Please enter email");
-    return;
-  }
-
   try {
 
     const response = await fetch(
@@ -22,23 +17,22 @@ async function sendOTP() {
 
     const data = await response.json();
 
+    console.log(data);
+
+    alert(data.message);
+
     if (response.ok) {
 
       localStorage.setItem("email", email);
 
-      alert(data.message);
-
-      window.location.href = "/frontend/templates/verify.html";
-
-    } else {
-
-      alert(data.message);
+      window.location.href =
+        "/frontend/templates/verify.html";
     }
 
   } catch (error) {
 
     console.error(error);
 
-    alert("Something went wrong");
+    alert("Request Failed");
   }
 }
