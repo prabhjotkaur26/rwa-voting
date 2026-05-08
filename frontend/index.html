@@ -1,97 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RWA Voting</title>
-  <link rel="stylesheet" href="./static/style.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="page-container">
-    <header class="page-header">
-      <h1>RWA Voting</h1>
-      <p id="page-subtitle">Secure community voting made simple.</p>
-    </header>
 
-    <main class="card" id="view-container">
+<div class="hero">
+  <h1>RWA Voting System</h1>
+  <p>Secure community voting made simple</p>
 
-      <!-- LOGIN -->
-      <div id="login-view" class="view active-view">
-        <h2>Request OTP</h2>
-        <p>Enter your registered email address to receive a one-time password.</p>
-        <form id="login-form" class="form-grid">
-          <label>
-            Email address
-            <input type="email" id="login-email" placeholder="you@example.com" required>
-          </label>
-          <button type="submit" class="btn-primary">Send OTP</button>
-        </form>
-      </div>
+  <a href="login.html" class="btn">Start Voting</a>
+</div>
 
-      <!-- OTP -->
-      <div id="otp-view" class="view">
-        <h2>Verify OTP</h2>
-        <p id="otp-description">Enter the OTP sent to your email.</p>
-        <form id="otp-form" class="form-grid">
-          <label>
-            One-time password
-            <input type="text" id="otp-code" placeholder="123456" maxlength="6" required>
-          </label>
-          <button type="submit" class="btn-primary">Verify OTP</button>
-        </form>
-        <p><a href="#" id="otp-back">Back</a></p>
-      </div>
-
-      <!-- VOTING (UPDATED 🔥) -->
-      <div id="vote-view" class="view">
-        <h2>Select Committee Members</h2>
-        <p id="vote-description">Select exactly 7 members for your community.</p>
-
-        <form id="vote-form" class="vote-grid">
-          <label><input type="checkbox" value="Member 1"> President</label>
-          <label><input type="checkbox" value="Member 2"> Vice President</label>
-          <label><input type="checkbox" value="Member 3"> Secretary</label>
-          <label><input type="checkbox" value="Member 4"> Treasurer</label>
-          <label><input type="checkbox" value="Member 5"> Member 5</label>
-          <label><input type="checkbox" value="Member 6"> Member 6</label>
-          <label><input type="checkbox" value="Member 7"> Member 7</label>
-          <label><input type="checkbox" value="Member 8"> Member 8</label>
-          <label><input type="checkbox" value="Member 9"> Member 9</label>
-        </form>
-
-        <button id="submit-vote" class="btn-primary">Submit Vote</button>
-
-        <p><a href="#" id="vote-logout">Logout</a></p>
-      </div>
-
-      <!-- RESULTS -->
-      <div id="results-view" class="view">
-        <h2>Election Results</h2>
-        <div class="results-card">
-          <table class="results-table">
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Votes</th>
-              </tr>
-            </thead>
-            <tbody id="results-body"></tbody>
-          </table>
-          <p id="results-empty">No results yet.</p>
-        </div>
-
-        <p>
-          <a href="#" id="results-back">Back</a>
-          <a href="#" id="results-logout">Logout</a>
-        </p>
-      </div>
-
-    </main>
-
-    <div id="message" class="card" style="display:none;"></div>
-  </div>
-
-  <script src="./config.js"></script>
-  <script src="./app.js"></script>
 </body>
 </html>
