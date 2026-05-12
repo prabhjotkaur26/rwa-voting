@@ -27,7 +27,7 @@ async function submitVote() {
   try {
 
     const response = await fetch(
-      "https://7p57z2eau2.execute-api.ap-south-1.amazonaws.com/submit-vote",
+      "https://7p57z2eau2.execute-api.ap-south-1.amazonaws.com/vote",
       {
         method: "POST",
 
