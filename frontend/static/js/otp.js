@@ -7,7 +7,7 @@ async function verifyOTP() {
   try {
 
     const response = await fetch(
-      "https://YOUR-VERIFY-API.execute-api.ap-south-1.amazonaws.com/verify-otp",
+      "https://7p57z2eau2.execute-api.ap-south-1.amazonaws.com/verify-otp",
       {
         method: "POST",
         headers: {
@@ -36,7 +36,7 @@ async function verifyOTP() {
 
     } else {
 
-      alert(data.message);
+      alert(data.message || "Verification Failed");
     }
 
   } catch (error) {
