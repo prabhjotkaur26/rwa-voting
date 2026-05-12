@@ -25,7 +25,8 @@ async function sendOTP() {
 
       localStorage.setItem("email", email);
 
-     window.location.href = "verify.html";
+      // IMPORTANT FIX
+      window.location.href = "verify.html";
     }
 
   } catch (error) {
