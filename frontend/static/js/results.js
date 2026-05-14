@@ -5,20 +5,35 @@ async function loadResults() {
   try {
 
     const response = await fetch(
-     "https://7p57z2eau2.execute-api.ap-south-1.amazonaws.com/results"
+      "https://7p57z2eau2.execute-api.ap-south-1.amazonaws.com/results"
     );
 
     const data = await response.json();
 
-    for (let key in data) {
+    const orderedMembers = [
+      "President",
+      "Vice President",
+      "Secretary ",
+      "Treasurer",
+      "Member 5",
+      "Member 6",
+      "Member 7",
+      "Member 8",
+      "Member 9"
+    ];
 
-      table.innerHTML += `
-        <tr>
-          <td>${key}</td>
-          <td>${data[key]}</td>
-        </tr>
-      `;
-    }
+    orderedMembers.forEach(member => {
+
+      if (data[member]) {
+
+        table.innerHTML += `
+          <tr>
+            <td>${member}</td>
+            <td>${data[member]}</td>
+          </tr>
+        `;
+      }
+    });
 
   } catch (error) {
 
