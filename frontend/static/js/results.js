@@ -2,21 +2,30 @@ async function loadResults() {
 
   const table = document.getElementById("resultsTable");
 
-  const data = {
-    "Member 1": 5,
-    "Member 2": 4,
-    "Member 3": 3
-  };
+  try {
 
-  for (let key in data) {
+    const response = await fetch(
+     "https://7p57z2eau2.execute-api.ap-south-1.amazonaws.com/results"
+    );
 
-    table.innerHTML += `
-      <tr>
-        <td>${key}</td>
-        <td>${data[key]}</td>
-      </tr>
-    `;
+    const data = await response.json();
+
+    for (let key in data) {
+
+      table.innerHTML += `
+        <tr>
+          <td>${key}</td>
+          <td>${data[key]}</td>
+        </tr>
+      `;
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Failed to load results");
   }
-  }
+}
 
 loadResults();
