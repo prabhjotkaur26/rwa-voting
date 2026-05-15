@@ -13,7 +13,7 @@ async function loadResults() {
     const orderedMembers = [
       "President",
       "Vice President",
-      "Secretary ",
+      "Secretary",
       "Treasurer",
       "Member 5",
       "Member 6",
