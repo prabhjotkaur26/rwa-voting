@@ -1,3 +1,5 @@
+let chart;
+
 async function loadDashboard() {
 
   try {
@@ -13,14 +15,20 @@ async function loadDashboard() {
     let totalVotes = 0;
 
     Object.values(data).forEach(votes => {
+
       totalVotes += votes;
     });
 
-    document.getElementById("totalVotes").innerText = totalVotes;
-
     const totalVoters = 150;
 
-    document.getElementById("totalVoters").innerText = totalVoters;
+    document.getElementById("totalVotes").innerText =
+      totalVotes;
+
+    document.getElementById("totalVoters").innerText =
+      totalVoters;
+
+    document.getElementById("electionStatus").innerText =
+      "Active";
 
     const participation =
       ((totalVotes / totalVoters) * 100).toFixed(1);
@@ -33,7 +41,10 @@ async function loadDashboard() {
   } catch (error) {
 
     console.error(error);
-    let chart;
+
+    alert("Failed to load dashboard");
+  }
+}
 
 function updateChart(data) {
 
@@ -41,7 +52,9 @@ function updateChart(data) {
 
   const votes = Object.values(data);
 
-  const ctx = document.getElementById("voteChart");
+  const ctx = document
+    .getElementById("voteChart")
+    .getContext("2d");
 
   if(chart) {
 
@@ -73,6 +86,14 @@ function updateChart(data) {
 
       responsive: true,
 
+      plugins: {
+
+        legend: {
+
+          display: false
+        }
+      },
+
       scales: {
 
         y: {
@@ -83,8 +104,7 @@ function updateChart(data) {
     }
   });
 }
-    loadDashboard();
+
+loadDashboard();
 
 setInterval(loadDashboard, 3000);
-  }
-}
