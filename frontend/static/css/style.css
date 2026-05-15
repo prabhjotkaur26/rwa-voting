@@ -78,18 +78,24 @@ body {
 }
 
 .status-btn {
-  background: linear-gradient(45deg, #22c55e, #16a34a);
+  background: linear-gradient(
+    45deg,
+    #22c55e,
+    #16a34a
+  );
+
   border: none;
   color: white;
   padding: 12px 24px;
   border-radius: 14px;
   font-weight: 600;
-  cursor: pointer;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns:
+    repeat(auto-fit, minmax(220px, 1fr));
+
   gap: 25px;
   margin-bottom: 35px;
 }
@@ -132,49 +138,67 @@ body {
 
 .chart-card,
 .activity-card {
+
   background: rgba(255,255,255,0.06);
+
   padding: 28px;
+
   border-radius: 22px;
+
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
 .chart-card h2,
 .activity-card h2 {
+
   margin-bottom: 25px;
 }
 
 .activity-item {
+
   display: flex;
+
   align-items: center;
+
   gap: 12px;
+
   background: rgba(255,255,255,0.05);
+
   padding: 15px;
+
   border-radius: 14px;
+
   margin-bottom: 15px;
 }
 
 .activity-item span {
+
   font-size: 24px;
 }
 
 canvas {
+
   background: white;
+
   border-radius: 16px;
+
   padding: 10px;
 }
 
 @media(max-width: 900px) {
 
   body {
+
     flex-direction: column;
   }
 
   .sidebar {
+
     width: 100%;
   }
 
   .content-grid {
+
     grid-template-columns: 1fr;
   }
-
 }
