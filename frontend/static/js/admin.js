@@ -33,5 +33,58 @@ async function loadDashboard() {
   } catch (error) {
 
     console.error(error);
+    let chart;
+
+function updateChart(data) {
+
+  const labels = Object.keys(data);
+
+  const votes = Object.values(data);
+
+  const ctx = document.getElementById("voteChart");
+
+  if(chart) {
+
+    chart.destroy();
+  }
+
+  chart = new Chart(ctx, {
+
+    type: "bar",
+
+    data: {
+
+      labels: labels,
+
+      datasets: [{
+
+        label: "Votes",
+
+        data: votes,
+
+        borderWidth: 1,
+
+        borderRadius: 10
+
+      }]
+    },
+
+    options: {
+
+      responsive: true,
+
+      scales: {
+
+        y: {
+
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+    loadDashboard();
+
+setInterval(loadDashboard, 3000);
   }
 }
