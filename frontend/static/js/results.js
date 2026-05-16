@@ -11,8 +11,6 @@ async function loadResults() {
 
     const data = await response.json();
 
-    console.log(data);
-
     table.innerHTML = "";
 
     Object.keys(data).forEach(member => {
@@ -28,6 +26,14 @@ async function loadResults() {
         </tr>
       `;
     });
+
+    const winner =
+      Object.keys(data).reduce((a, b) =>
+        data[a] > data[b] ? a : b
+      );
+
+    document.getElementById("winnerBox").innerText =
+      "🏆 Winner: " + winner;
 
   } catch (error) {
 
