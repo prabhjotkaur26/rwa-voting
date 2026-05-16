@@ -1,31 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Results</title>
-  <link rel="stylesheet" href="../static/css/style.css">
+
+  <title>Live Results</title>
+
+  <link rel="stylesheet"
+        href="../static/css/style.css">
+
 </head>
+
 <body>
 
 <div class="card large-card">
 
-<h2>Admin Results Panel</h2>
+  <h2>Live Election Results</h2>
 
-<table>
-<thead>
-<tr>
-<th>Candidate</th>
-<th>Votes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Member 1</td>
-<td>10</td>
-</tr>
-</tbody>
-</table>
+  <table>
+
+    <thead>
+
+      <tr>
+
+        <th>Candidate</th>
+
+        <th>Votes</th>
+
+      </tr>
+
+    </thead>
+
+    <tbody id="resultsTable">
+
+    </tbody>
+
+  </table>
 
 </div>
+
+<script src="../static/js/results.js"></script>
 
 </body>
 </html>
