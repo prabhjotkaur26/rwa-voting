@@ -1,6 +1,7 @@
 async function loadResults() {
 
-  const table = document.getElementById("resultsTable");
+  const table =
+    document.getElementById("resultsTable");
 
   try {
 
@@ -10,29 +11,22 @@ async function loadResults() {
 
     const data = await response.json();
 
-    const orderedMembers = [
-      "President",
-      "Vice President",
-      "Secretary",
-      "Treasurer",
-      "Member 5",
-      "Member 6",
-      "Member 7",
-      "Member 8",
-      "Member 9"
-    ];
+    console.log(data);
 
-    orderedMembers.forEach(member => {
+    table.innerHTML = "";
 
-      if (data[member]) {
+    Object.keys(data).forEach(member => {
 
-        table.innerHTML += `
-          <tr>
-            <td>${member}</td>
-            <td>${data[member]}</td>
-          </tr>
-        `;
-      }
+      table.innerHTML += `
+
+        <tr>
+
+          <td>${member}</td>
+
+          <td>${data[member]}</td>
+
+        </tr>
+      `;
     });
 
   } catch (error) {
@@ -44,3 +38,5 @@ async function loadResults() {
 }
 
 loadResults();
+
+setInterval(loadResults, 2000);
