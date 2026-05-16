@@ -1,48 +1,29 @@
-async function loadResults() {
+<div class="card large-card">
 
-  const table =
-    document.getElementById("resultsTable");
+  <h2>Live Election Results</h2>
 
-  try {
+  <h3 id="winnerBox">
+    🏆 Winner: Loading...
+  </h3>
 
-    const response = await fetch(
-      "https://7p57z2eau2.execute-api.ap-south-1.amazonaws.com/results"
-    );
+  <table>
 
-    const data = await response.json();
+    <thead>
 
-    table.innerHTML = "";
+      <tr>
 
-    Object.keys(data).forEach(member => {
+        <th>Candidate</th>
 
-      table.innerHTML += `
+        <th>Votes</th>
 
-        <tr>
+      </tr>
 
-          <td>${member}</td>
+    </thead>
 
-          <td>${data[member]}</td>
+    <tbody id="resultsTable">
 
-        </tr>
-      `;
-    });
+    </tbody>
 
-    const winner =
-      Object.keys(data).reduce((a, b) =>
-        data[a] > data[b] ? a : b
-      );
+  </table>
 
-    document.getElementById("winnerBox").innerText =
-      "🏆 Winner: " + winner;
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert("Failed to load results");
-  }
-}
-
-loadResults();
-
-setInterval(loadResults, 2000);
+</div>
